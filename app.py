@@ -1,412 +1,748 @@
-import re
-import sys
+
 from pathlib import Path
+import sys
 from datetime import date
 
-import pandas as pd
 import streamlit as st
+import pandas as pd
+
+# --------------------------------------------------
+# 1. APP CONFIGURATION AND IMPORT PATH
+# --------------------------------------------------
 
 PROJECT_DIR = Path(__file__).resolve().parent
+SRC_DIR = PROJECT_DIR / "src"
+
+# Ensure Python can find the src package on Streamlit Cloud.
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
 
-from src.resume_generator import generate_resume_pdf
-from src.portfolio_generator import generate_portfolio_html
-from src.application_tracker import (
-    STATUSES,
-    add_application,
-    list_applications,
-    update_application,
-    delete_application,
-)
-
 st.set_page_config(
-    page_title="Dynamic Portfolio and Resume Generator",
+    page_title="CareerForge AI",
     page_icon="📄",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-st.title("Dynamic Portfolio and Resume Generator")
-st.caption(
-    "Create a resume, preview a portfolio, compare job keywords, "
-    "and track applications."
+# --------------------------------------------------
+# 2. IMPORT PROJECT MODULES
+# --------------------------------------------------
+
+try:
+    from src.resume_generator import generate_resume_pdf
+    from src.portfolio_generator import generate_portfolio_html
+    from src.application_tracker import (
+        STATUSES,
+        add_application,
+        list_applications,
+        update_application,
+        delete_application,
+    )
+    from src.job_matcher import analyze_job_match
+    from src.validation import (
+        validate_profile,
+        validate_job_description,
+    )
+    from src.dashboard import build_dashboard_data
+    from src.privacy_settings import (
+        get_database_info,
+        reset_application_database,
+        PRIVACY_GUIDANCE,
+    )
+
+except ModuleNotFoundError as exc:
+    st.error("A required project module or dependency is missing.")
+    st.code(str(exc))
+
+    st.markdown(
+        """
+        **Check your GitHub repository structure:**
+
+        ```text
+        Dynamic-Portfolio-Resume-Generator/
+        ├── app.py
+        ├── requirements.txt
+        └── src/
+            ├── __init__.py
+            ├── resume_generator.py
+            ├── portfolio_generator.py
+            ├── application_tracker.py
+            ├── job_matcher.py
+            ├── validation.py
+            ├── dashboard.py
+            └── privacy_settings.py
+        ```
+
+        Commit the missing files and redeploy the app.
+        """
+    )
+    st.stop()
+
+# --------------------------------------------------
+# 3. SESSION STATE
+# --------------------------------------------------
+
+DEFAULT_PROFILE = {
+    "name": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "linkedin": "",
+    "website": "",
+    "summary": "",
+    "skills": [],
+    "experience": [],
+    "education": [],
+    "projects": [],
+}
+
+if "profile" not in st.session_state:
+    st.session_state.profile = DEFAULT_PROFILE.copy()
+
+if "job_description" not in st.session_state:
+    st.session_state.job_description = ""
+
+# --------------------------------------------------
+# 4. HELPER FUNCTIONS
+# --------------------------------------------------
+
+def parse_lines(value):
+    """Convert multiline text into a list of non-empty lines."""
+    return [
+        line.strip()
+        for line in str(value or "").splitlines()
+        if line.strip()
+    ]
+
+
+def parse_skills(value):
+    """Convert comma-separated skills into a clean list."""
+    return list(dict.fromkeys(
+        skill.strip()
+        for skill in str(value or "").replace("\n", ",").split(",")
+        if skill.strip()
+    ))
+
+
+def current_profile():
+    return st.session_state.profile
+
+
+def get_application_id(application):
+    """Support common database ID field names."""
+    for key in ("id", "application_id"):
+        if application.get(key) is not None:
+            return application[key]
+    return None
+
+
+def get_applications():
+    """Load application records with a friendly error message."""
+    try:
+        return list_applications() or []
+    except Exception as exc:
+        st.error(f"Could not load the application tracker: {exc}")
+        return []
+
+
+# --------------------------------------------------
+# 5. SIDEBAR NAVIGATION
+# --------------------------------------------------
+
+st.sidebar.title("CareerForge AI")
+st.sidebar.caption("Your career toolkit")
+
+page = st.sidebar.radio(
+    "Navigation",
+    [
+        "Dashboard",
+        "Profile & Resume",
+        "Portfolio",
+        "Job Match",
+        "Application Tracker",
+        "Settings & Privacy",
+    ],
 )
 
-PAGES = [
-    "Profile & Resume",
-    "Portfolio Preview",
-    "Job Description Match",
-    "Application Tracker",
-]
+st.sidebar.divider()
+st.sidebar.caption("Build your profile. Prepare your resume. Track your career.")
 
-with st.sidebar:
-    st.header("Navigation")
-    page = st.radio("Choose a feature", PAGES)
-    st.divider()
-    st.caption("Use sample information while developing. Avoid sensitive data.")
+# --------------------------------------------------
+# 6. DASHBOARD
+# --------------------------------------------------
 
-st.session_state.setdefault("profile", {})
+if page == "Dashboard":
+    st.title("Career Dashboard")
+    st.write("An overview of your job search activity.")
 
-# ---------------------------------------------------------
-# PROFILE AND RESUME
-# ---------------------------------------------------------
-if page == "Profile & Resume":
-    st.header("Your professional profile")
-    saved = st.session_state.profile
+    applications = get_applications()
+
+    try:
+        dashboard = build_dashboard_data(applications)
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric(
+            "Total applications",
+            dashboard["total_applications"],
+        )
+        col2.metric(
+            "Active applications",
+            dashboard["active_applications"],
+        )
+        col3.metric(
+            "Interviews",
+            dashboard["interviews"],
+        )
+        col4.metric(
+            "Offers",
+            dashboard["offers"],
+        )
+
+        st.subheader("Applications by status")
+
+        status_counts = dashboard["status_counts"]
+
+        if status_counts:
+            chart_data = pd.DataFrame({
+                "Status": list(status_counts.keys()),
+                "Applications": list(status_counts.values()),
+            }).set_index("Status")
+
+            st.bar_chart(chart_data)
+        else:
+            st.info("Add an application to see your statistics.")
+
+        st.subheader("Upcoming follow-ups")
+
+        followups = dashboard["upcoming_followups"]
+
+        if followups:
+            followup_rows = [
+                {
+                    "Company": app.get("company", ""),
+                    "Job title": app.get("job_title", ""),
+                    "Follow-up date": app.get("follow_up_date", ""),
+                    "Status": app.get("status", ""),
+                }
+                for app in followups
+            ]
+            st.dataframe(
+                pd.DataFrame(followup_rows),
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("No upcoming follow-ups recorded.")
+
+        st.metric(
+            "Overdue follow-ups",
+            dashboard["overdue_followups"],
+        )
+
+        st.subheader("Recent applications")
+
+        recent = dashboard["recent_applications"]
+
+        if recent:
+            recent_rows = [
+                {
+                    "Company": app.get("company", ""),
+                    "Job title": app.get("job_title", ""),
+                    "Status": app.get("status", ""),
+                    "Applied date": app.get("applied_date", ""),
+                }
+                for app in recent
+            ]
+
+            st.dataframe(
+                pd.DataFrame(recent_rows),
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("Your recent applications will appear here.")
+
+    except Exception as exc:
+        st.error(f"Could not build the dashboard: {exc}")
+
+# --------------------------------------------------
+# 7. PROFILE AND RESUME
+# --------------------------------------------------
+
+elif page == "Profile & Resume":
+    st.title("Profile & Resume")
+    st.write("Enter your details to prepare your resume.")
+
+    profile = current_profile()
 
     with st.form("profile_form"):
-        col1, col2 = st.columns(2)
-
-        with col1:
-            name = st.text_input("Full name *", value=saved.get("name", ""))
-            email = st.text_input("Email", value=saved.get("email", ""))
-            phone = st.text_input("Phone", value=saved.get("phone", ""))
-            location = st.text_input("Location", value=saved.get("location", ""))
-
-        with col2:
-            linkedin = st.text_input("LinkedIn URL", value=saved.get("linkedin", ""))
-            website = st.text_input(
-                "Website or GitHub URL", value=saved.get("website", "")
-            )
-            target_role = st.text_input(
-                "Target role", value=saved.get("target_role", "")
-            )
+        name = st.text_input(
+            "Full name *",
+            value=profile.get("name", ""),
+        )
+        email = st.text_input(
+            "Email",
+            value=profile.get("email", ""),
+        )
+        phone = st.text_input(
+            "Phone",
+            value=profile.get("phone", ""),
+        )
+        location = st.text_input(
+            "Location",
+            value=profile.get("location", ""),
+        )
+        linkedin = st.text_input(
+            "LinkedIn URL",
+            value=profile.get("linkedin", ""),
+        )
+        website = st.text_input(
+            "Personal website URL",
+            value=profile.get("website", ""),
+        )
 
         summary = st.text_area(
-            "Professional summary", value=saved.get("summary", "")
-        )
-        skills = st.text_area(
-            "Skills",
-            value=saved.get("skills", ""),
-            help="Enter skills separated by commas or on separate lines.",
-        )
-        experience = st.text_area(
-            "Experience", value=saved.get("experience", ""), height=130
-        )
-        education = st.text_area(
-            "Education", value=saved.get("education", "")
-        )
-        projects = st.text_area(
-            "Projects", value=saved.get("projects", ""), height=110
+            "Professional summary",
+            value=profile.get("summary", ""),
+            height=120,
+            max_chars=3000,
         )
 
-        save_profile = st.form_submit_button("Save profile", type="primary")
+        skills_text = st.text_area(
+            "Skills (separate with commas)",
+            value=", ".join(profile.get("skills", [])),
+            help="Example: Python, SQL, Streamlit, Data Analysis",
+        )
+
+        experience_text = st.text_area(
+            "Experience",
+            value="\n".join(profile.get("experience", [])),
+            height=130,
+            help="Enter one experience entry per line.",
+        )
+
+        education_text = st.text_area(
+            "Education",
+            value="\n".join(profile.get("education", [])),
+            height=100,
+            help="Enter one education entry per line.",
+        )
+
+        projects_text = st.text_area(
+            "Projects",
+            value="\n".join(profile.get("projects", [])),
+            height=130,
+            help="Enter one project entry per line.",
+        )
+
+        save_profile = st.form_submit_button(
+            "Save Profile",
+            type="primary",
+        )
 
     if save_profile:
-        if not name.strip():
-            st.error("Please enter your name.")
+        new_profile = {
+            "name": name.strip(),
+            "email": email.strip(),
+            "phone": phone.strip(),
+            "location": location.strip(),
+            "linkedin": linkedin.strip(),
+            "website": website.strip(),
+            "summary": summary.strip(),
+            "skills": parse_skills(skills_text),
+            "experience": parse_lines(experience_text),
+            "education": parse_lines(education_text),
+            "projects": parse_lines(projects_text),
+        }
+
+        errors = validate_profile(new_profile)
+
+        if errors:
+            for error in errors:
+                st.error(error)
         else:
-            st.session_state.profile = {
-                "name": name.strip(),
-                "email": email.strip(),
-                "phone": phone.strip(),
-                "location": location.strip(),
-                "linkedin": linkedin.strip(),
-                "website": website.strip(),
-                "target_role": target_role.strip(),
-                "summary": summary.strip(),
-                "skills": skills.strip(),
-                "experience": experience.strip(),
-                "education": education.strip(),
-                "projects": projects.strip(),
-            }
+            st.session_state.profile = new_profile
             st.success("Profile saved for this session.")
             st.rerun()
 
-    profile = st.session_state.profile
-    if profile.get("name"):
-        st.subheader("Resume PDF")
+    st.divider()
+    st.subheader("Download your resume")
+
+    profile = current_profile()
+
+    if not profile.get("name", "").strip():
+        st.info("Enter and save your name before generating a resume.")
+    else:
         try:
-            pdf_data = generate_resume_pdf(profile)
+            pdf_bytes = generate_resume_pdf(profile)
+
             st.download_button(
-                "Download resume PDF",
-                data=pdf_data,
+                "Download Resume PDF",
+                data=pdf_bytes,
                 file_name="resume.pdf",
                 mime="application/pdf",
-                type="primary",
             )
         except Exception as exc:
             st.error(f"Could not generate the resume: {exc}")
 
-# ---------------------------------------------------------
-# PORTFOLIO PREVIEW AND DOWNLOAD
-# ---------------------------------------------------------
-elif page == "Portfolio Preview":
-    profile = st.session_state.profile
-    st.header("Portfolio preview")
+# --------------------------------------------------
+# 8. PORTFOLIO
+# --------------------------------------------------
 
-    if not profile.get("name"):
-        st.info("Save your profile first in Profile & Resume.")
+elif page == "Portfolio":
+    st.title("Portfolio Generator")
+    st.write("Create a downloadable HTML portfolio from your profile.")
+
+    profile = current_profile()
+
+    if not profile.get("name", "").strip():
+        st.info(
+            "First complete and save your profile in the Profile & Resume page."
+        )
     else:
-        st.title(profile["name"])
-        if profile.get("target_role"):
-            st.subheader(profile["target_role"])
-        if profile.get("location"):
-            st.caption(profile["location"])
-
-        if profile.get("summary"):
-            st.markdown("### About Me")
-            st.write(profile["summary"])
-
-        if profile.get("skills"):
-            st.markdown("### Skills")
-            skill_items = [
-                item.strip()
-                for item in re.split(r"[,\n]", profile["skills"])
-                if item.strip()
-            ]
-            st.write(" · ".join(skill_items))
-
-        for heading, key in [
-            ("Experience", "experience"),
-            ("Projects", "projects"),
-            ("Education", "education"),
-        ]:
-            if profile.get(key):
-                st.markdown(f"### {heading}")
-                st.write(profile[key])
-
-        links = []
-        if profile.get("linkedin"):
-            links.append(f"[LinkedIn]({profile['linkedin']})")
-        if profile.get("website"):
-            links.append(f"[Website / GitHub]({profile['website']})")
-        if links:
-            st.markdown(" · ".join(links))
-
         try:
-            html_data = generate_portfolio_html(profile)
+            html_content = generate_portfolio_html(profile)
+
+            st.success("Your portfolio is ready.")
+
             st.download_button(
-                "Download portfolio HTML",
-                data=html_data,
+                "Download Portfolio HTML",
+                data=html_content,
                 file_name="portfolio.html",
                 mime="text/html",
             )
+
+            with st.expander("Preview portfolio HTML"):
+                st.code(html_content, language="html")
+
         except Exception as exc:
-            st.error(f"Could not generate the portfolio: {exc}")
+            st.error(f"Could not generate your portfolio: {exc}")
 
-# ---------------------------------------------------------
-# JOB DESCRIPTION MATCH
-# ---------------------------------------------------------
-elif page == "Job Description Match":
-    st.header("Job description keyword match")
-    profile = st.session_state.profile
+# --------------------------------------------------
+# 9. JOB DESCRIPTION MATCH
+# --------------------------------------------------
 
-    if not profile.get("name"):
-        st.info("Save your profile first. You can still paste a job description below.")
-
-    job_description = st.text_area(
-        "Paste the job description",
-        height=230,
-        placeholder="Paste the responsibilities and required skills here.",
+elif page == "Job Match":
+    st.title("Job Description Match")
+    st.write(
+        "Compare the keywords in your saved profile with a job description."
     )
 
-    if st.button("Analyze keyword match", type="primary"):
-        if not profile.get("name"):
-            st.warning("Please save your profile first.")
-        elif not job_description.strip():
-            st.warning("Please paste a job description.")
-        else:
-            profile_text = " ".join(
-                str(profile.get(key, ""))
-                for key in [
-                    "target_role", "summary", "skills",
-                    "experience", "education", "projects",
-                ]
-            ).lower()
+    profile = current_profile()
 
-            stop_words = {
-                "and", "the", "with", "for", "you", "your", "are",
-                "our", "will", "from", "that", "this", "have", "has",
-                "job", "role", "work", "team", "years", "year",
-                "ability", "including", "using", "required", "preferred",
-                "strong", "knowledge", "must", "should",
-            }
+    job_description = st.text_area(
+        "Paste job description",
+        value=st.session_state.job_description,
+        height=240,
+        placeholder="Paste the job responsibilities and qualifications here...",
+    )
 
-            def get_keywords(text):
-                words = re.findall(r"[a-zA-Z][a-zA-Z0-9+#.-]{1,}", text.lower())
-                return {
-                    word for word in words
-                    if len(word) > 2 and word not in stop_words
-                }
+    st.session_state.job_description = job_description
 
-            job_terms = get_keywords(job_description)
-            profile_terms = get_keywords(profile_text)
+    if st.button("Analyze Match", type="primary"):
+        errors = validate_profile(profile)
+        description_error = validate_job_description(job_description)
 
-            if not job_terms:
-                st.warning("Not enough recognizable keywords were found.")
-            else:
-                matched = sorted(job_terms & profile_terms)
-                missing = sorted(job_terms - profile_terms)
-                score = round(100 * len(matched) / len(job_terms))
-
-                st.metric("Keyword overlap estimate", f"{score}%")
-                st.caption(
-                    "This is a simple keyword estimate, not an actual ATS score "
-                    "or a prediction of hiring success."
-                )
-
-                left, right = st.columns(2)
-                with left:
-                    st.markdown("#### Matching keywords")
-                    st.write(", ".join(matched) if matched else "No matches found.")
-                with right:
-                    st.markdown("#### Keywords to review")
-                    st.write(", ".join(missing[:60]) if missing else "No unmatched keywords.")
-
-                st.info(
-                    "Only add skills or keywords that accurately represent your experience."
-                )
-
-# ---------------------------------------------------------
-# APPLICATION TRACKER: ADD, EDIT, DELETE
-# ---------------------------------------------------------
-elif page == "Application Tracker":
-    st.header("Job Application Tracker")
-    st.write("Record applications, update progress, and manage follow-ups.")
-
-    with st.form("add_application_form", clear_on_submit=True):
-        company = st.text_input("Company name *")
-        job_title = st.text_input("Job title *")
-        job_url = st.text_input("Job posting URL")
-        status = st.selectbox("Status", STATUSES, key="new_application_status")
-        applied_date = st.date_input("Application date", value=date.today())
-        follow_up_date = st.date_input("Follow-up date", value=None)
-        notes = st.text_area("Notes")
-        add_clicked = st.form_submit_button("Add application", type="primary")
-
-    if add_clicked:
-        if not company.strip() or not job_title.strip():
-            st.error("Company name and job title are required.")
+        if not profile.get("name", "").strip():
+            st.warning(
+                "Please save your profile first. A name is required."
+            )
+        elif description_error:
+            st.warning(description_error)
         else:
             try:
-                add_application(
-                    company=company,
-                    job_title=job_title,
-                    job_url=job_url,
-                    status=status,
-                    applied_date=applied_date.isoformat(),
-                    follow_up_date=(
-                        follow_up_date.isoformat() if follow_up_date else ""
-                    ),
-                    notes=notes,
+                result = analyze_job_match(profile, job_description)
+
+                st.metric(
+                    "Keyword overlap",
+                    f"{result['match_percentage']}%",
                 )
-                st.success("Application added.")
-                st.rerun()
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.subheader("Matched keywords")
+                    if result["matched_keywords"]:
+                        st.write(
+                            ", ".join(result["matched_keywords"])
+                        )
+                    else:
+                        st.info("No matching keywords found.")
+
+                with col2:
+                    st.subheader("Missing keywords")
+                    if result["missing_keywords"]:
+                        st.write(
+                            ", ".join(result["missing_keywords"])
+                        )
+                    else:
+                        st.success(
+                            "All extracted job keywords were found."
+                        )
+
+                st.subheader("Suggestions")
+                for suggestion in result["suggestions"]:
+                    st.write(f"- {suggestion}")
+
+                st.caption(
+                    "This is a simple keyword-overlap estimate, "
+                    "not an official ATS score or a hiring prediction."
+                )
+
             except Exception as exc:
-                st.error(f"Could not add application: {exc}")
+                st.error(f"Could not analyze the job description: {exc}")
+
+# --------------------------------------------------
+# 10. APPLICATION TRACKER
+# --------------------------------------------------
+
+elif page == "Application Tracker":
+    st.title("Job Application Tracker")
+    st.write("Save and manage the jobs you are applying for.")
+
+    with st.expander("Add a new application", expanded=True):
+        with st.form("add_application_form"):
+            company = st.text_input("Company *")
+            job_title = st.text_input("Job title *")
+            job_url = st.text_input("Job URL")
+            status = st.selectbox(
+                "Status",
+                options=list(STATUSES),
+                index=0,
+            )
+            applied_date = st.date_input(
+                "Applied date",
+                value=date.today(),
+            )
+            has_followup = st.checkbox("Set a follow-up date")
+            follow_up_date = None
+
+            if has_followup:
+                follow_up_date = st.date_input(
+                    "Follow-up date",
+                    value=date.today(),
+                )
+
+            notes = st.text_area("Notes")
+
+            add_submitted = st.form_submit_button(
+                "Add Application",
+                type="primary",
+            )
+
+        if add_submitted:
+            if not company.strip() or not job_title.strip():
+                st.error("Company and job title are required.")
+            else:
+                try:
+                    add_application(
+                        company=company.strip(),
+                        job_title=job_title.strip(),
+                        job_url=job_url.strip(),
+                        status=status,
+                        applied_date=applied_date.isoformat(),
+                        follow_up_date=(
+                            follow_up_date.isoformat()
+                            if follow_up_date else ""
+                        ),
+                        notes=notes.strip(),
+                    )
+                    st.success("Application added.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Could not add the application: {exc}")
 
     st.divider()
     st.subheader("Saved applications")
 
-    filter_status = st.selectbox(
-        "Filter applications by status",
-        ["All"] + STATUSES,
-        key="filter_application_status",
-    )
-
-    try:
-        applications = list_applications(
-            status=None if filter_status == "All" else filter_status
-        )
-    except Exception as exc:
-        applications = []
-        st.error(f"Could not load applications: {exc}")
+    applications = get_applications()
 
     if not applications:
-        st.info("No applications found. Add your first application above.")
+        st.info("No applications saved yet.")
     else:
-        table_columns = [
-            "id", "company", "job_title", "status",
-            "applied_date", "follow_up_date", "job_url", "notes",
+        display_rows = [
+            {
+                "ID": get_application_id(app),
+                "Company": app.get("company", ""),
+                "Job title": app.get("job_title", ""),
+                "Status": app.get("status", ""),
+                "Applied date": app.get("applied_date", ""),
+                "Follow-up date": app.get("follow_up_date", ""),
+            }
+            for app in applications
         ]
+
         st.dataframe(
-            pd.DataFrame(applications)[table_columns],
+            pd.DataFrame(display_rows),
             use_container_width=True,
             hide_index=True,
         )
 
-        ids = [row["id"] for row in applications]
-        selected_id = st.selectbox(
-            "Select an application to manage",
-            ids,
-            format_func=lambda item_id: next(
-                f"#{row['id']} — {row['company']} — {row['job_title']}"
-                for row in applications if row["id"] == item_id
-            ),
-        )
-        selected = next(row for row in applications if row["id"] == selected_id)
+        editable_apps = [
+            app for app in applications
+            if get_application_id(app) is not None
+        ]
 
-        with st.expander("Edit selected application"):
+        if editable_apps:
+            st.subheader("Edit or delete an application")
+
+            selected_id = st.selectbox(
+                "Select application",
+                options=[
+                    get_application_id(app)
+                    for app in editable_apps
+                ],
+                format_func=lambda app_id: next(
+                    (
+                        f"{app.get('company', '')} — "
+                        f"{app.get('job_title', '')} (ID {app_id})"
+                        for app in editable_apps
+                        if get_application_id(app) == app_id
+                    ),
+                    str(app_id),
+                ),
+            )
+
+            selected_app = next(
+                app for app in editable_apps
+                if get_application_id(app) == selected_id
+            )
+
             with st.form("edit_application_form"):
                 edit_company = st.text_input(
-                    "Company name", value=selected["company"]
+                    "Company",
+                    value=selected_app.get("company", ""),
                 )
                 edit_title = st.text_input(
-                    "Job title", value=selected["job_title"]
+                    "Job title",
+                    value=selected_app.get("job_title", ""),
                 )
                 edit_url = st.text_input(
-                    "Job posting URL", value=selected.get("job_url") or ""
+                    "Job URL",
+                    value=selected_app.get("job_url", ""),
                 )
+
+                current_status = selected_app.get("status", STATUSES[0])
+                status_index = (
+                    list(STATUSES).index(current_status)
+                    if current_status in STATUSES else 0
+                )
+
                 edit_status = st.selectbox(
-                    "Application status",
-                    STATUSES,
-                    index=STATUSES.index(selected["status"]),
+                    "Status",
+                    options=list(STATUSES),
+                    index=status_index,
                 )
-                edit_applied = st.text_input(
-                    "Application date (YYYY-MM-DD)",
-                    value=selected.get("applied_date") or "",
+
+                edit_applied_date = st.text_input(
+                    "Applied date (YYYY-MM-DD)",
+                    value=selected_app.get("applied_date", ""),
                 )
                 edit_follow_up = st.text_input(
-                    "Follow-up date (YYYY-MM-DD)",
-                    value=selected.get("follow_up_date") or "",
+                    "Follow-up date (YYYY-MM-DD, optional)",
+                    value=selected_app.get("follow_up_date", ""),
                 )
                 edit_notes = st.text_area(
-                    "Notes", value=selected.get("notes") or ""
+                    "Notes",
+                    value=selected_app.get("notes", ""),
                 )
-                save_changes = st.form_submit_button("Save changes")
 
-            if save_changes:
-                try:
-                    changed = update_application(
-                        selected_id,
-                        company=edit_company,
-                        job_title=edit_title,
-                        job_url=edit_url,
-                        status=edit_status,
-                        applied_date=edit_applied,
-                        follow_up_date=edit_follow_up,
-                        notes=edit_notes,
-                    )
-                    if changed:
+                update_submitted = st.form_submit_button(
+                    "Save Changes"
+                )
+
+            if update_submitted:
+                if not edit_company.strip() or not edit_title.strip():
+                    st.error("Company and job title are required.")
+                else:
+                    try:
+                        update_application(
+                            selected_id,
+                            company=edit_company.strip(),
+                            job_title=edit_title.strip(),
+                            job_url=edit_url.strip(),
+                            status=edit_status,
+                            applied_date=edit_applied_date.strip(),
+                            follow_up_date=edit_follow_up.strip(),
+                            notes=edit_notes.strip(),
+                        )
                         st.success("Application updated.")
                         st.rerun()
-                    else:
-                        st.warning("No changes were saved.")
-                except Exception as exc:
-                    st.error(f"Could not update application: {exc}")
+                    except Exception as exc:
+                        st.error(f"Could not update the application: {exc}")
 
-        st.divider()
-        st.subheader("Remove an application")
-        st.warning("Deleting an application permanently removes that record from the local database.")
+            st.divider()
+            st.subheader("Delete an application")
 
-        confirm_delete = st.checkbox(
-            f"I want to permanently delete #{selected_id}: "
-            f"{selected['company']} — {selected['job_title']}",
-            key=f"confirm_delete_{selected_id}",
-        )
+            confirm_delete = st.checkbox(
+                f"I confirm that I want to delete application ID {selected_id}."
+            )
 
-        if st.button(
-            "Delete selected application",
-            type="secondary",
-            disabled=not confirm_delete,
-        ):
-            try:
-                deleted = delete_application(selected_id)
-                if deleted:
-                    st.success("Application deleted.")
-                    st.rerun()
+            if st.button("Delete Selected Application"):
+                if not confirm_delete:
+                    st.warning("Please confirm before deleting.")
                 else:
-                    st.warning("Application was not found.")
+                    try:
+                        delete_application(selected_id)
+                        st.success("Application deleted.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Could not delete the application: {exc}")
+
+# --------------------------------------------------
+# 11. SETTINGS AND PRIVACY
+# --------------------------------------------------
+
+elif page == "Settings & Privacy":
+    st.title("Settings & Privacy")
+
+    st.subheader("Application database")
+
+    try:
+        info = get_database_info()
+
+        st.write("Database location:", info["path"])
+        st.write(
+            "Database status:",
+            "Available" if info["exists"] else "Not created yet",
+        )
+        st.write(f"Database size: {info['size_bytes']} bytes")
+
+    except Exception as exc:
+        st.warning(f"Could not read database information: {exc}")
+
+    st.subheader("Privacy checklist")
+
+    for item in PRIVACY_GUIDANCE:
+        st.markdown(f"- {item}")
+
+    st.divider()
+    st.subheader("Reset application tracker")
+
+    st.warning(
+        "This permanently deletes the local job application database. "
+        "Back up any records you want to keep."
+    )
+
+    confirm_reset = st.checkbox(
+        "I understand that this permanently deletes saved applications."
+    )
+
+    if st.button("Reset Application Tracker"):
+        if not confirm_reset:
+            st.error("Please confirm before resetting.")
+        else:
+            try:
+                reset_application_database(confirm=True)
+                st.success("Application tracker reset.")
+                st.rerun()
             except Exception as exc:
-                st.error(f"Could not delete application: {exc}")
+                st.error(f"Could not reset the tracker: {exc}")
+
+# --------------------------------------------------
+# 12. FOOTER
+# --------------------------------------------------
+
+st.sidebar.divider()
+st.sidebar.caption("CareerForge AI · Dynamic Portfolio and Resume Generator")

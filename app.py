@@ -112,5 +112,3 @@ elif page == "Settings & Privacy":
         "followed by ?admin=1) to review or delete those submissions."
     )
 
-
-    

@@ -1,165 +1,118 @@
-from pathlib import Path
-import sys
-import json
-from datetime import date
+            st.subheader("Edit or delete an application")
 
-import streamlit as st
-import pandas as pd
+            selected_id = st.selectbox(
+                "Select application",
+                options=[
+                    get_application_id(app)
+                    for app in editable_apps
+                ],
+                format_func=lambda app_id: next(
+                    (
+                        f"{app.get('company', '')} — "
+                        f"{app.get('job_title', '')} (ID {app_id})"
+                        for app in editable_apps
+                        if get_application_id(app) == app_id
+                    ),
+                    str(app_id),
+                ),
+            )
+
+            selected_app = next(
+                app for app in editable_apps
+                if get_application_id(app) == selected_id
+            )
+
+            with st.form("edit_application_form"):
+                edit_company = st.text_input(
+                    "Company",
+                    value=selected_app.get("company", ""),
+                )
+                edit_title = st.text_input(
+                    "Job title",
+                    value=selected_app.get("job_title", ""),
+                )
+                edit_url = st.text_input(
+                    "Job URL",
+                    value=selected_app.get("job_url", ""),
+                )
+
+                current_status = selected_app.get("status", STATUSES[0])
+                status_index = (
+                    list(STATUSES).index(current_status)
+                    if current_status in STATUSES else 0
+                )
+
+                edit_status = st.selectbox(
+                    "Status",
+                    options=list(STATUSES),
+                    index=status_index,
+                )
+
+                edit_applied_date = st.text_input(
+                    "Applied date (YYYY-MM-DD)",
+                    value=selected_app.get("applied_date", ""),
+                )
+                edit_follow_up = st.text_input(
+                    "Follow-up date (YYYY-MM-DD, optional)",
+                    value=selected_app.get("follow_up_date", ""),
+                )
+                edit_notes = st.text_area(
+                    "Notes",
+                    value=selected_app.get("notes", ""),
+                )
+
+                update_submitted = st.form_submit_button(
+                    "Save Changes"
+                )
+
+            if update_submitted:
+                if not edit_company.strip() or not edit_title.strip():
+                    st.error("Company and job title are required.")
+                else:
+                    try:
+                        update_application(
+                            selected_id,
+                            company=edit_company.strip(),
+                            job_title=edit_title.strip(),
+                            job_url=edit_url.strip(),
+                            status=edit_status,
+                            applied_date=edit_applied_date.strip(),
+                            follow_up_date=edit_follow_up.strip(),
+                            notes=edit_notes.strip(),
+                        )
+                        st.success("Application updated.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Could not update the application: {exc}")
+
+            st.divider()
+            st.subheader("Delete an application")
+
+            confirm_delete = st.checkbox(
+                f"I confirm that I want to delete application ID {selected_id}."
+            )
+
+            if st.button("Delete Selected Application"):
+                if not confirm_delete:
+                    st.warning("Please confirm before deleting.")
+                else:
+                    try:
+                        delete_application(selected_id)
+                        st.success("Application deleted.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Could not delete the application: {exc}")
 
 # --------------------------------------------------
-# 1. APP CONFIGURATION
+# 11. SETTINGS & PRIVACY
 # --------------------------------------------------
 
-PROJECT_DIR = Path(__file__).resolve().parent
-
-if str(PROJECT_DIR) not in sys.path:
-    sys.path.insert(0, str(PROJECT_DIR))
-
-st.set_page_config(
-    page_title="CareerForge AI",
-    page_icon="📄",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# --------------------------------------------------
-# 2. IMPORT PROJECT MODULES
-# --------------------------------------------------
-
-try:
-    from src.resume_generator import generate_resume_pdf
-    from src.portfolio_generator import generate_portfolio_html
-
-    from src.application_tracker import (
-        STATUSES,
-        add_application,
-        list_applications,
-        update_application,
-        delete_application,
-    )
-
-    from src.job_matcher import analyze_job_match
-
-    from src.validation import (
-        validate_profile,
-        validate_job_description,
-    )
-
-    from src.dashboard import build_dashboard_data
-
-    from src.privacy_settings import PRIVACY_GUIDANCE
-
-    from src.privacy_store import (
-        render_admin_page,
-        save_submission,
-    )
-
-except ModuleNotFoundError as exc:
-    st.error("A required project module or dependency is missing.")
-    st.code(str(exc))
+elif page == "Settings & Privacy":
+    st.title("Settings & Privacy")
+    st.write(PRIVACY_GUIDANCE)
     st.info(
-        "Check that your src folder contains all required Python "
-        "modules and that requirements.txt includes their dependencies."
+        "Owner-submitted records are stored separately in the private "
+        "Supabase submissions table. Use the owner dashboard (your app URL "
+        "followed by ?admin=1) to review or delete those submissions."
     )
-    st.stop()
 
-# --------------------------------------------------
-# 3. OWNER ADMIN DASHBOARD
-# Open the app URL with ?admin=1
-# --------------------------------------------------
-
-if st.query_params.get("admin") == "1":
-    render_admin_page()
-    st.stop()
-
-# --------------------------------------------------
-# 4. SESSION STATE
-# --------------------------------------------------
-
-DEFAULT_PROFILE = {
-    "name": "",
-    "email": "",
-    "phone": "",
-    "location": "",
-    "linkedin": "",
-    "website": "",
-    "summary": "",
-    "skills": [],
-    "experience": [],
-    "education": [],
-    "projects": [],
-}
-
-if "profile" not in st.session_state:
-    st.session_state.profile = DEFAULT_PROFILE.copy()
-
-if "job_description" not in st.session_state:
-    st.session_state.job_description = ""
-
-# --------------------------------------------------
-# 5. HELPER FUNCTIONS
-# --------------------------------------------------
-
-def parse_lines(value):
-    """Convert multiline text into a list of non-empty lines."""
-    return [
-        line.strip()
-        for line in str(value or "").splitlines()
-        if line.strip()
-    ]
-
-
-def parse_skills(value):
-    """Convert comma-separated skills into a unique list."""
-    skills = [
-        skill.strip()
-        for skill in str(value or "").replace("\n", ",").split(",")
-        if skill.strip()
-    ]
-    return list(dict.fromkeys(skills))
-
-
-def current_profile():
-    return st.session_state.profile
-
-
-def get_application_id(application):
-    """Support common application ID field names."""
-    for key in ("id", "application_id"):
-        if application.get(key) is not None:
-            return application[key]
-    return None
-
-
-def get_applications():
-    """Load application records safely."""
-    try:
-        return list_applications() or []
-    except Exception as exc:
-        st.error(f"Could not load applications: {exc}")
-        return []
-
-
-# --------------------------------------------------
-# 6. SIDEBAR NAVIGATION
-# --------------------------------------------------
-
-st.sidebar.title("CareerForge AI")
-st.sidebar.caption("Your personal career toolkit")
-
-page = st.sidebar.radio(
-    "Navigation",
-    [
-        "Dashboard",
-        "Profile & Resume",
-        "Portfolio",
-        "Job Match",
-        "Application Tracker",
-        "Settings & Privacy",
-    ],
-)
-
-st.sidebar.divider()
-st.sidebar.caption(
-    "Build your profile. Prepare your resume. Track your career."
-)

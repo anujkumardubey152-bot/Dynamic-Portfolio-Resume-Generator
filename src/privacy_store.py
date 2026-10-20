@@ -76,12 +76,14 @@ def save_submission(
             "consent": True,
         }).execute()
 
-    except Exception:
-        return (
-            False,
-            "Could not save your submission. Check the database "
-            "configuration and try again.",
-        )
+    except Exception as exc:
+    st.error("Could not load submissions from Supabase.")
+    st.code(f"{type(exc).__name__}: {exc}")
+    st.info(
+        "Check the Supabase Project URL, service-role key, "
+        "and whether the public.submissions table exists."
+    )
+    return
 
     notification_sent = False
 

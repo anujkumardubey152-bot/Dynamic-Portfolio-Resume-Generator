@@ -749,13 +749,14 @@ elif page == "Application Tracker":
 
 elif page == "Settings & Privacy":
     st.title("Settings & Privacy")
-    st.write(PRIVACY_GUIDANCE)
-
-    st.info(
-        "Owner-submitted records are stored separately in the private "
-        "Supabase submissions table. Use the owner dashboard (your app URL "
-        "followed by ?admin=1) to review or delete those submissions."
+    st.write(
+        "Your privacy matters. CareerForge AI is designed to help you "
+        "build your professional profile while keeping your information "
+        "in mind. Review your resume and portfolio carefully before "
+        "sharing them, and only publish information you are comfortable "
+        "making public."
     )
+    st.success("Build your future with confidence, one step at a time.")
 
             # --------------------------------------------------
 # 12. FALLBACK PAGE

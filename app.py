@@ -1338,67 +1338,136 @@ elif page == "Application Tracker":
 elif page == "Settings & Privacy":
 
     st.title("Settings & Privacy")
-    st.caption(
-        "Manage your account information and understand how your data is protected."
-    )
-
-    # ----------------------------------------------
-    # ACCOUNT INFORMATION
-    # ----------------------------------------------
-
-    st.subheader("👤 Your Account")
-
-    account_col1, account_col2 = st.columns(2)
-
-    with account_col1:
-        st.markdown("**Full Name**")
-        st.info(current_user.get("name") or "Not provided")
-
-    with account_col2:
-        st.markdown("**Email Address**")
-        st.info(current_user.get("email") or "Not provided")
+    st.write("Manage your account and keep your information safe.")
 
     st.divider()
 
-    # ----------------------------------------------
-    # PROFILE INFORMATION
-    # ----------------------------------------------
+    # Account Settings
+    st.subheader("Account Settings")
 
-    st.subheader("📄 Profile Information")
+    user = st.session_state.get("user", {})
 
-    profile = current_profile()
+    st.text_input(
+        "Name",
+        value=user.get("name", ""),
+        disabled=True
+    )
 
-    profile_col1, profile_col2 = st.columns(2)
+    st.text_input(
+        "Email",
+        value=user.get("email", ""),
+        disabled=True
+    )
 
-    with profile_col1:
-        st.markdown("**Profile Name**")
-        st.write(profile.get("name") or "Not completed")
+    st.success("Account Status: Active")
 
-        st.markdown("**Location**")
-        st.write(profile.get("location") or "Not provided")
+    st.divider()
 
-    with profile_col2:
-        st.markdown("**Contact Email**")
-        st.write(profile.get("email") or "Not provided")
+    # Privacy and Security
+    st.subheader("Privacy & Security")
 
-        st.markdown("**Phone Number**")
-        st.write(profile.get("phone") or "Not provided")
+    st.markdown("""
+    - Your profile information is private.
+    - Your personal details are not shared publicly.
+    - Your portfolio is shared only when you choose to share its link.
+    - Keep your password confidential.
+    - Always log out when using a shared computer.
+    """)
 
-    st.markdown("**Your Skills**")
+    st.divider()
 
-    skills = profile.get("skills", [])
+    # Data Management
+    st.subheader("Data Management")
 
-    if skills:
-        st.write(" · ".join(skills))
-    else:
-        st.info(
-            "No skills added yet. Complete your profile "
-            "in the Profile & Resume section."
+    st.write("Manage your saved CareerForge AI information.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("Download My Data", use_container_width=True):
+            profile = load_profile(active_user_id)
+            applications = list_user_applications(active_user_id)
+
+            import json
+
+            user_data = {
+                "profile": profile,
+                "applications": applications
+            }
+
+            st.download_button(
+                "Download JSON",
+                data=json.dumps(user_data, indent=4, default=str),
+                file_name="careerforge_my_data.json",
+                mime="application/json",
+                use_container_width=True
+            )
+
+    with col2:
+        if st.button("Delete My Data", type="secondary", use_container_width=True):
+            st.session_state["confirm_delete_data"] = True
+
+    if st.session_state.get("confirm_delete_data", False):
+
+        st.warning(
+            "Are you sure? This action will permanently delete your saved profile and applications."
         )
 
-    if st.button("Edit My Profile", use_container_width=False):
-        st.session_state["profile_edit_redirect"] = True
+        confirm_col1, confirm_col2 = st.columns(2)
+
+        with confirm_col1:
+            if st.button("Yes, Delete My Data", type="primary"):
+                import sqlite3
+
+                conn = connect_user_data()
+
+                try:
+                    conn.execute(
+                        "DELETE FROM user_applications WHERE user_id = ?",
+                        (active_user_id,)
+                    )
+
+                    conn.execute(
+                        "DELETE FROM user_profiles WHERE user_id = ?",
+                        (active_user_id,)
+                    )
+
+                    conn.commit()
+
+                    st.session_state["profile"] = DEFAULT_PROFILE.copy()
+                    st.session_state["confirm_delete_data"] = False
+
+                    st.success("Your profile and application data have been deleted.")
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Could not delete data: {e}")
+
+                finally:
+                    conn.close()
+
+        with confirm_col2:
+            if st.button("Cancel"):
+                st.session_state["confirm_delete_data"] = False
+                st.rerun()
+
+    st.divider()
+
+    # About
+    st.subheader("About CareerForge AI")
+
+    st.write("**App Version:** 1.0")
+    st.write("**Built with:** Python and Streamlit")
+    st.write("**Purpose:** Create resumes, portfolios, and manage job applications.")
+
+    st.divider()
+
+    if st.button("Log Out", use_container_width=True):
+        st.session_state.clear()
         st.rerun()
+
+
+
 
     # ----------------------------------------------
     # PRIVACY INFORMATION

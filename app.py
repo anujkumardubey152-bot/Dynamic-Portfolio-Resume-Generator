@@ -1331,20 +1331,159 @@ elif page == "Application Tracker":
                         )
 
 
-# --------------------------------------------------
-# 13. SETTINGS AND PRIVACY
-# --------------------------------------------------
+# ==================================================
+# SETTINGS & PRIVACY
+# ==================================================
 
 elif page == "Settings & Privacy":
 
     st.title("Settings & Privacy")
+    st.caption(
+        "Manage your account information and understand how your data is protected."
+    )
 
-    st.write(PRIVACY_GUIDANCE)
+    # ----------------------------------------------
+    # ACCOUNT INFORMATION
+    # ----------------------------------------------
+
+    st.subheader("👤 Your Account")
+
+    account_col1, account_col2 = st.columns(2)
+
+    with account_col1:
+        st.markdown("**Full Name**")
+        st.info(current_user.get("name") or "Not provided")
+
+    with account_col2:
+        st.markdown("**Email Address**")
+        st.info(current_user.get("email") or "Not provided")
+
+    st.divider()
+
+    # ----------------------------------------------
+    # PROFILE INFORMATION
+    # ----------------------------------------------
+
+    st.subheader("📄 Profile Information")
+
+    profile = current_profile()
+
+    profile_col1, profile_col2 = st.columns(2)
+
+    with profile_col1:
+        st.markdown("**Profile Name**")
+        st.write(profile.get("name") or "Not completed")
+
+        st.markdown("**Location**")
+        st.write(profile.get("location") or "Not provided")
+
+    with profile_col2:
+        st.markdown("**Contact Email**")
+        st.write(profile.get("email") or "Not provided")
+
+        st.markdown("**Phone Number**")
+        st.write(profile.get("phone") or "Not provided")
+
+    st.markdown("**Your Skills**")
+
+    skills = profile.get("skills", [])
+
+    if skills:
+        st.write(" · ".join(skills))
+    else:
+        st.info(
+            "No skills added yet. Complete your profile "
+            "in the Profile & Resume section."
+        )
+
+    if st.button("Edit My Profile", use_container_width=False):
+        st.session_state["profile_edit_redirect"] = True
+        st.rerun()
+
+    # ----------------------------------------------
+    # PRIVACY INFORMATION
+    # ----------------------------------------------
+
+    st.divider()
+
+    st.subheader("🔒 Privacy & Data Protection")
+
+    st.write(
+        "Your information should be handled carefully. "
+        "Follow these recommendations to protect your career data."
+    )
+
+    privacy_items = [
+        "Do not commit personal resumes, .env files, or application databases to GitHub.",
+        "Keep applications.db excluded through .gitignore.",
+        "Review PDF resumes and portfolio HTML before sharing them publicly.",
+        "Use only contact information you intend to publish.",
+        "Keep backups before deleting application records.",
+    ]
+
+    for index, item in enumerate(privacy_items, start=1):
+        st.markdown(f"**{index}.** {item}")
+
+    st.divider()
+
+    st.subheader("🗄️ Data Storage")
 
     st.info(
-        "Owner-submitted records are stored separately in the "
-        "private Supabase submissions table. Use the owner "
-        "dashboard (your app URL followed by ?admin=1) to "
-        "review or delete those submissions."
+        "Owner-submitted records are stored separately in the private "
+        "Supabase submissions table. The app owner can review them "
+        "through the owner dashboard."
     )
+
+    st.warning(
+        "Your account and profile database currently use SQLite. "
+        "Streamlit Community Cloud may reset local database files "
+        "during restarts or redeployments. Persistent storage is "
+        "recommended before using this app for permanent accounts."
+    )
+
+    # ----------------------------------------------
+    # OWNER DASHBOARD
+    # ----------------------------------------------
+
+    st.divider()
+
+    st.subheader("⚙️ Owner Dashboard")
+
+    st.write(
+        "The owner can review submitted information through the "
+        "private administration page."
+    )
+
+    st.code(
+        "Your-App-URL/?admin=1",
+        language="text",
+    )
+
+    # ----------------------------------------------
+    # SIGN OUT
+    # ----------------------------------------------
+
+    st.divider()
+
+    st.subheader("🚪 Sign Out")
+
+    st.write(
+        "Sign out of your CareerForge AI account on this device."
+    )
+
+    if st.button(
+        "Logout",
+        type="primary",
+        use_container_width=True,
+    ):
+
+        for key in (
+            "user",
+            "profile",
+            "active_user_id",
+            "job_description",
+        ):
+            st.session_state.pop(key, None)
+
+        st.rerun()
 

@@ -2,15 +2,15 @@
 from pathlib import Path
 import sys
 from datetime import date
-from copy import deepcopy
+import json
 
-import pandas as pd
 import streamlit as st
+import pandas as pd
 
 
-# =========================================================
+# --------------------------------------------------
 # 1. APP CONFIGURATION
-# =========================================================
+# --------------------------------------------------
 
 PROJECT_DIR = Path(__file__).resolve().parent
 
@@ -25,169 +25,101 @@ st.set_page_config(
 )
 
 
-# =========================================================
-# 2. IMPORT EXISTING PROJECT MODULES
-# =========================================================
+# --------------------------------------------------
+# 2. IMPORT PROJECT MODULES
+# --------------------------------------------------
 
 try:
-    from src.auth_ui import render_auth_page
-
-    from src.user_data import (
-        connect as connect_user_data,
-        save_profile,
-        load_profile,
-        add_user_application,
-        list_user_applications,
-    )
-
     from src.resume_generator import generate_resume_pdf
     from src.portfolio_generator import generate_portfolio_html
+
+    from src.application_tracker import STATUSES
+
     from src.job_matcher import analyze_job_match
+
     from src.validation import (
         validate_profile,
         validate_job_description,
     )
+
     from src.dashboard import build_dashboard_data
-    from src.application_tracker import STATUSES
+
+    from src.privacy_settings import (
+        get_database_info,
+        reset_application_database,
+        PRIVACY_GUIDANCE,
+    )
+
+    from src.privacy_store import (
+        render_admin_page,
+        save_submission,
+    )
+
+    from src.auth_ui import render_auth_page
+
+    from src.user_data import (
+        load_profile,
+        save_profile as save_user_profile,
+        add_user_application,
+        list_user_applications,
+        connect as connect_user_data,
+    )
 
 except ModuleNotFoundError as exc:
     st.error("A required project module or dependency is missing.")
     st.code(str(exc))
-    st.info(
-        "Check that your requirements.txt and src folder contain "
-        "all the required project modules."
-    )
+
+    st.markdown("""
+    **Check your GitHub repository structure:**
+
+    ```text
+    Dynamic-Portfolio-Resume-Generator/
+    ├── app.py
+    ├── requirements.txt
+    └── src/
+        ├── __init__.py
+        ├── resume_generator.py
+        ├── portfolio_generator.py
+        ├── application_tracker.py
+        ├── job_matcher.py
+        ├── validation.py
+        ├── dashboard.py
+        ├── privacy_settings.py
+        ├── privacy_store.py
+        ├── auth.py
+        ├── auth_ui.py
+        └── user_data.py
+    ```
+
+    Commit any missing files and redeploy.
+    """)
     st.stop()
 
 
-# =========================================================
-# 3. PROFESSIONAL FRONTEND
-# =========================================================
+# --------------------------------------------------
+# 3. OWNER ADMIN PAGE
+# --------------------------------------------------
 
-st.markdown(
-    """
-    <style>
-    @import url(
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
-    );
-
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-
-    .stApp {
-        background: #f5f7fc;
-    }
-
-    [data-testid="stSidebar"] {
-        background: #111a35;
-    }
-
-    [data-testid="stSidebar"] * {
-        color: #f5f7ff !important;
-    }
-
-    [data-testid="stSidebar"] [data-testid="stRadio"] label {
-        padding: 8px 10px;
-        border-radius: 9px;
-    }
-
-    .brand {
-        font-size: 25px;
-        font-weight: 800;
-        color: #ffffff;
-        letter-spacing: -0.8px;
-        margin-bottom: 3px;
-    }
-
-    .brand-caption {
-        font-size: 12px;
-        color: #aab7d4;
-        margin-bottom: 25px;
-    }
-
-    .hero {
-        padding: 25px 28px;
-        border-radius: 18px;
-        background: linear-gradient(120deg, #18264b, #344b87);
-        color: white;
-        margin-bottom: 25px;
-    }
-
-    .hero h1 {
-        color: white;
-        font-size: 29px;
-        font-weight: 800;
-        margin-bottom: 5px;
-    }
-
-    .hero p {
-        color: #dbe5ff;
-        margin-bottom: 0;
-    }
-
-    .section-heading {
-        color: #1d2b4d;
-        font-size: 21px;
-        font-weight: 750;
-        margin-top: 12px;
-        margin-bottom: 12px;
-    }
-
-    .small-muted {
-        color: #73809b;
-        font-size: 13px;
-    }
-
-    div[data-testid="stMetric"] {
-        background: white;
-        border: 1px solid #e7ebf4;
-        padding: 17px;
-        border-radius: 14px;
-        box-shadow: 0 3px 12px rgba(25, 42, 80, 0.04);
-    }
-
-    div[data-testid="stForm"] {
-        background: white;
-        padding: 20px;
-        border: 1px solid #e7ebf4;
-        border-radius: 14px;
-    }
-
-    div[data-testid="stExpander"] {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e7ebf4;
-    }
-
-    .stButton > button,
-    .stDownloadButton > button {
-        border-radius: 9px;
-        font-weight: 600;
-        min-height: 42px;
-    }
-
-    .stTextInput input,
-    .stTextArea textarea {
-        border-radius: 9px;
-    }
-
-    hr {
-        border-color: #e5eaf3;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+if st.query_params.get("admin") == "1":
+    render_admin_page()
+    st.stop()
 
 
-# =========================================================
-# 4. DEFAULT PROFILE AND SESSION STATE
-# =========================================================
+# --------------------------------------------------
+# 4. USER LOGIN
+# --------------------------------------------------
+
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if st.session_state.user is None:
+    render_auth_page()
+    st.stop()
+
+
+# --------------------------------------------------
+# 5. DEFAULT PROFILE AND USER DATA
+# --------------------------------------------------
 
 DEFAULT_PROFILE = {
     "name": "",
@@ -201,30 +133,40 @@ DEFAULT_PROFILE = {
     "experience": [],
     "education": [],
     "projects": [],
+    "project_details": [],
 }
 
-if "user" not in st.session_state:
-    st.session_state.user = None
+active_user_id = st.session_state.user["id"]
 
-if "profile" not in st.session_state:
-    st.session_state.profile = deepcopy(DEFAULT_PROFILE)
+# Load the signed-in user's saved profile once per account.
+if st.session_state.get("active_user_id") != active_user_id:
+
+    try:
+        saved_profile = load_profile(active_user_id) or {}
+
+    except Exception as exc:
+        st.error(f"Could not load your saved profile: {exc}")
+        saved_profile = {}
+
+    st.session_state.profile = {
+        **DEFAULT_PROFILE,
+        **saved_profile,
+    }
+
+    st.session_state.active_user_id = active_user_id
+    st.session_state.job_description = ""
 
 if "job_description" not in st.session_state:
     st.session_state.job_description = ""
 
-if "job_match_result" not in st.session_state:
-    st.session_state.job_match_result = None
 
-if "profile_edit_redirect" not in st.session_state:
-    st.session_state.profile_edit_redirect = False
-
-
-# =========================================================
-# 5. HELPER FUNCTIONS
-# =========================================================
+# --------------------------------------------------
+# 6. HELPER FUNCTIONS
+# --------------------------------------------------
 
 def parse_lines(value):
     """Convert multiline text into a list of non-empty lines."""
+
     return [
         line.strip()
         for line in str(value or "").splitlines()
@@ -233,11 +175,12 @@ def parse_lines(value):
 
 
 def parse_skills(value):
-    """Convert comma-separated skills into a unique list."""
+    """Convert comma-separated text into unique values."""
+
     return list(dict.fromkeys(
-        skill.strip()
-        for skill in str(value or "").replace("\n", ",").split(",")
-        if skill.strip()
+        item.strip()
+        for item in str(value or "").replace("\n", ",").split(",")
+        if item.strip()
     ))
 
 
@@ -245,169 +188,213 @@ def current_profile():
     return st.session_state.profile
 
 
-def load_current_user_data():
-    """Load this signed-in user's profile and initialize user tables."""
-    user = st.session_state.user
+def get_project_details(profile):
+    """
+    Return structured project information.
 
-    if not user:
-        return
+    Supports older profiles where projects were stored
+    as a list of plain text entries.
+    """
 
-    try:
-        connect_user_data()
-        stored_profile = load_profile(user["id"])
+    details = profile.get("project_details", []) or []
 
-        if isinstance(stored_profile, dict):
-            profile = deepcopy(DEFAULT_PROFILE)
-            profile.update(stored_profile)
+    if details:
+        projects = []
 
-            # The account email is the verified login identifier,
-            # not an email-verification claim.
-            profile["email"] = user["email"]
+        for item in details:
 
-            st.session_state.profile = profile
-        else:
-            profile = deepcopy(DEFAULT_PROFILE)
-            profile["name"] = user.get("name", "")
-            profile["email"] = user.get("email", "")
-            st.session_state.profile = profile
+            if not isinstance(item, dict):
+                continue
 
-    except Exception as exc:
-        st.error("Could not load your saved profile.")
-        st.caption(str(exc))
+            projects.append({
+                "title": str(item.get("title", "")).strip(),
+                "description": str(
+                    item.get("description", "")
+                ).strip(),
+                "technologies": item.get(
+                    "technologies", []
+                ) or [],
+                "github_url": str(
+                    item.get("github_url", "")
+                ).strip(),
+                "live_url": str(
+                    item.get("live_url", "")
+                ).strip(),
+            })
+
+        return projects
+
+    # Convert old text-only project entries.
+    return [
+        {
+            "title": str(project).strip(),
+            "description": "",
+            "technologies": [],
+            "github_url": "",
+            "live_url": "",
+        }
+        for project in profile.get("projects", [])
+        if str(project).strip()
+    ]
+
+
+def get_application_id(application):
+    """Support common database ID field names."""
+
+    for key in ("id", "application_id"):
+
+        if application.get(key) is not None:
+            return application[key]
+
+    return None
 
 
 def get_applications():
-    """Return only applications belonging to the signed-in user."""
-    user = st.session_state.user
-
-    if not user:
-        return []
+    """Load applications belonging to the signed-in user."""
 
     try:
-        return list_user_applications(user["id"]) or []
+        return (
+            list_user_applications(
+                st.session_state.user["id"]
+            ) or []
+        )
+
     except Exception as exc:
-        st.error("Could not load your applications.")
-        st.caption(str(exc))
+        st.error(f"Could not load the application tracker: {exc}")
         return []
 
 
-def show_hero(title, subtitle):
-    st.markdown(
-        f"""
-        <div class="hero">
-            <h1>{title}</h1>
-            <p>{subtitle}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+def update_owned_application(application_id, **fields):
+    """Update only an application belonging to the current user."""
+
+    allowed = {
+        "company",
+        "job_title",
+        "job_url",
+        "status",
+        "applied_date",
+        "follow_up_date",
+        "notes",
+    }
+
+    values = {
+        key: value
+        for key, value in fields.items()
+        if key in allowed
+    }
+
+    if not values:
+        return False
+
+    assignments = ", ".join(
+        f"{key} = ?" for key in values
     )
 
+    with connect_user_data() as connection:
 
-def show_empty_state(message):
-    st.info(message)
+        cursor = connection.execute(
+            f"""
+            UPDATE user_applications
+            SET {assignments}
+            WHERE id = ? AND user_id = ?
+            """,
+            (
+                *values.values(),
+                application_id,
+                st.session_state.user["id"],
+            ),
+        )
 
+        connection.commit()
 
-# =========================================================
-# 6. LOGIN PROTECTION
-# =========================================================
-
-# The authentication module manages registration and login.
-# No application or profile page is shown before login.
-
-if not st.session_state.user:
-    render_auth_page()
-    st.stop()
-
-
-# Load the signed-in user's data once per session.
-if st.session_state.get("loaded_user_id") != st.session_state.user["id"]:
-    load_current_user_data()
-    st.session_state.loaded_user_id = st.session_state.user["id"]
+        return cursor.rowcount > 0
 
 
-# =========================================================
-# 7. SIDEBAR AND NAVIGATION
-# =========================================================
+def delete_owned_application(application_id):
+    """Delete only an application belonging to the current user."""
 
-user = st.session_state.user
+    with connect_user_data() as connection:
 
-with st.sidebar:
-    st.markdown(
-        '<div class="brand">CareerForge AI</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="brand-caption">Your personal career workspace</div>',
-        unsafe_allow_html=True,
-    )
+        cursor = connection.execute(
+            """
+            DELETE FROM user_applications
+            WHERE id = ? AND user_id = ?
+            """,
+            (
+                application_id,
+                st.session_state.user["id"],
+            ),
+        )
 
-    st.markdown("### Navigation")
+        connection.commit()
 
-    pages = [
+        return cursor.rowcount > 0
+
+
+# --------------------------------------------------
+# 7. SIDEBAR NAVIGATION
+# --------------------------------------------------
+
+st.sidebar.title("CareerForge AI")
+st.sidebar.caption("Your career toolkit")
+
+page = st.sidebar.radio(
+    "Navigation",
+    [
         "Dashboard",
         "Profile & Resume",
         "Portfolio",
         "Job Match",
         "Application Tracker",
         "Settings & Privacy",
-    ]
+    ],
+)
 
-    if st.session_state.profile_edit_redirect:
-        default_page = "Profile & Resume"
-        st.session_state.profile_edit_redirect = False
-    else:
-        default_page = "Dashboard"
+st.sidebar.caption(
+    f"Signed in as: {st.session_state.user.get('name', '')}"
+)
 
-    if "selected_page" not in st.session_state:
-        st.session_state.selected_page = default_page
+if st.sidebar.button(
+    "Logout",
+    use_container_width=True,
+):
 
-    page = st.radio(
-        "Choose a section",
-        pages,
-        key="selected_page",
-        label_visibility="collapsed",
-    )
+    for key in (
+        "user",
+        "profile",
+        "active_user_id",
+        "job_description",
+    ):
+        st.session_state.pop(key, None)
 
-    st.divider()
+    st.rerun()
 
-    st.markdown("### Signed in as")
-    st.write(user.get("name", "User"))
-    st.caption(user.get("email", ""))
+st.sidebar.divider()
 
-    st.divider()
+st.sidebar.caption(
+    "Build your profile. Prepare your resume. Track your career."
+)
 
-    st.caption("Your career. Your progress. Your future.")
-
-    if st.button("Log out", use_container_width=True):
-        for key in [
-            "user",
-            "profile",
-            "job_description",
-            "job_match_result",
-            "loaded_user_id",
-            "selected_page",
-            "profile_edit_redirect",
-        ]:
-            st.session_state.pop(key, None)
-
-        st.rerun()
+st.title("CareerForge AI")
+st.caption(f"Current section: {page}")
 
 
-# =========================================================
+# --------------------------------------------------
 # 8. DASHBOARD
-# =========================================================
+# --------------------------------------------------
 
 if page == "Dashboard":
 
-    show_hero(
-        "Welcome back, " + user.get("name", "there") + "!",
-        "Your career progress and job search activity at a glance.",
+    st.title("Career Dashboard")
+
+    st.write(
+        "An overview of your job search activity."
     )
 
-    profile = current_profile()
     applications = get_applications()
 
     try:
+
         dashboard = build_dashboard_data(applications)
 
         col1, col2, col3, col4 = st.columns(4)
@@ -432,223 +419,300 @@ if page == "Dashboard":
             dashboard["offers"],
         )
 
-        st.markdown(
-            '<div class="section-heading">Application overview</div>',
-            unsafe_allow_html=True,
-        )
+        st.subheader("Applications by status")
 
         status_counts = dashboard["status_counts"]
 
         if status_counts:
+
             chart_data = pd.DataFrame({
                 "Status": list(status_counts.keys()),
                 "Applications": list(status_counts.values()),
             }).set_index("Status")
 
             st.bar_chart(chart_data)
+
         else:
-            show_empty_state(
-                "Your application chart will appear after you add applications."
+            st.info(
+                "Add an application to see your statistics."
             )
 
-        col1, col2 = st.columns(2)
+        st.subheader("Upcoming follow-ups")
 
-        with col1:
-            st.markdown(
-                '<div class="section-heading">Upcoming follow-ups</div>',
-                unsafe_allow_html=True,
+        followups = dashboard["upcoming_followups"]
+
+        if followups:
+
+            followup_rows = [
+                {
+                    "Company": app.get("company", ""),
+                    "Job title": app.get("job_title", ""),
+                    "Follow-up date": app.get(
+                        "follow_up_date", ""
+                    ),
+                    "Status": app.get("status", ""),
+                }
+                for app in followups
+            ]
+
+            st.dataframe(
+                pd.DataFrame(followup_rows),
+                use_container_width=True,
+                hide_index=True,
             )
 
-            followups = dashboard["upcoming_followups"]
-
-            if followups:
-                rows = [
-                    {
-                        "Company": app.get("company", ""),
-                        "Position": app.get("job_title", ""),
-                        "Date": app.get("follow_up_date", ""),
-                        "Status": app.get("status", ""),
-                    }
-                    for app in followups
-                ]
-
-                st.dataframe(
-                    pd.DataFrame(rows),
-                    use_container_width=True,
-                    hide_index=True,
-                )
-            else:
-                st.caption("No upcoming follow-ups.")
-
-        with col2:
-            st.markdown(
-                '<div class="section-heading">Recent applications</div>',
-                unsafe_allow_html=True,
-            )
-
-            recent = dashboard["recent_applications"]
-
-            if recent:
-                rows = [
-                    {
-                        "Company": app.get("company", ""),
-                        "Position": app.get("job_title", ""),
-                        "Status": app.get("status", ""),
-                        "Applied": app.get("applied_date", ""),
-                    }
-                    for app in recent
-                ]
-
-                st.dataframe(
-                    pd.DataFrame(rows),
-                    use_container_width=True,
-                    hide_index=True,
-                )
-            else:
-                st.caption("No recent applications.")
+        else:
+            st.info("No upcoming follow-ups recorded.")
 
         st.metric(
             "Overdue follow-ups",
             dashboard["overdue_followups"],
         )
 
+        st.subheader("Recent applications")
+
+        recent = dashboard["recent_applications"]
+
+        if recent:
+
+            recent_rows = [
+                {
+                    "Company": app.get("company", ""),
+                    "Job title": app.get("job_title", ""),
+                    "Status": app.get("status", ""),
+                    "Applied date": app.get("applied_date", ""),
+                }
+                for app in recent
+            ]
+
+            st.dataframe(
+                pd.DataFrame(recent_rows),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        else:
+            st.info(
+                "Your recent applications will appear here."
+            )
+
     except Exception as exc:
-        st.error("Could not prepare your dashboard.")
-        st.caption(str(exc))
-
-    st.divider()
-
-    st.markdown(
-        '<div class="section-heading">Your career profile</div>',
-        unsafe_allow_html=True,
-    )
-
-    profile_col1, profile_col2 = st.columns(2)
-
-    with profile_col1:
-        st.metric(
-            "Profile skills",
-            len(profile.get("skills", [])),
-        )
-
-    with profile_col2:
-        st.metric(
-            "Projects added",
-            len(profile.get("projects", [])),
-        )
-
-    if not profile.get("name"):
-        st.warning(
-            "Your profile is not complete yet. "
-            "Visit Profile & Resume to get started."
-        )
+        st.error(f"Could not build the dashboard: {exc}")
 
 
-# =========================================================
+# --------------------------------------------------
 # 9. PROFILE AND RESUME
-# =========================================================
+# --------------------------------------------------
 
 elif page == "Profile & Resume":
 
-    show_hero(
-        "Profile & Resume",
-        "Create and maintain the professional profile behind your career documents.",
+    st.title("Profile & Resume")
+
+    st.write(
+        "Enter your details to prepare your resume and portfolio."
     )
 
     profile = current_profile()
 
-    st.markdown("### Personal information")
-
     with st.form("profile_form"):
 
-        col1, col2 = st.columns(2)
+        st.subheader("Personal information")
 
-        with col1:
-            name = st.text_input(
-                "Full name *",
-                value=profile.get("name", ""),
-            )
+        name = st.text_input(
+            "Full name *",
+            value=profile.get("name", ""),
+        )
 
-            email = st.text_input(
-                "Email address",
-                value=user.get("email", ""),
-                disabled=True,
-                help="Your account email is managed through your login.",
-            )
+        email = st.text_input(
+            "Email",
+            value=profile.get("email", ""),
+        )
 
-            phone = st.text_input(
-                "Phone number",
-                value=profile.get("phone", ""),
-            )
+        phone = st.text_input(
+            "Phone",
+            value=profile.get("phone", ""),
+        )
 
-        with col2:
-            location = st.text_input(
-                "Location",
-                value=profile.get("location", ""),
-            )
+        location = st.text_input(
+            "Location",
+            value=profile.get("location", ""),
+        )
 
-            linkedin = st.text_input(
-                "LinkedIn URL",
-                value=profile.get("linkedin", ""),
-            )
+        linkedin = st.text_input(
+            "LinkedIn URL",
+            value=profile.get("linkedin", ""),
+        )
 
-            website = st.text_input(
-                "Personal website",
-                value=profile.get("website", ""),
-            )
+        website = st.text_input(
+            "Personal website URL",
+            value=profile.get("website", ""),
+        )
 
-        st.markdown("### Professional summary")
+        st.divider()
+
+        st.subheader("Professional summary")
 
         summary = st.text_area(
-            "Write a short professional introduction",
+            "Professional summary",
             value=profile.get("summary", ""),
             height=120,
             max_chars=3000,
         )
 
-        st.markdown("### Skills")
+        st.subheader("Skills")
 
         skills_text = st.text_area(
-            "Skills (comma-separated)",
+            "Skills (separate with commas)",
             value=", ".join(profile.get("skills", [])),
-            placeholder="Python, SQL, Streamlit, Communication",
+            help="Example: Python, SQL, Streamlit, Data Analysis",
         )
 
-        st.markdown("### Experience")
+        st.subheader("Experience")
 
         experience_text = st.text_area(
-            "Experience (one entry per line)",
+            "Experience",
             value="\n".join(profile.get("experience", [])),
             height=130,
+            help="Enter one experience entry per line.",
         )
 
-        st.markdown("### Education")
+        st.subheader("Education")
 
         education_text = st.text_area(
-            "Education (one entry per line)",
+            "Education",
             value="\n".join(profile.get("education", [])),
             height=100,
+            help="Enter one education entry per line.",
         )
 
-        st.markdown("### Projects")
+        # ------------------------------------------
+        # STRUCTURED PROJECT FIELDS
+        # ------------------------------------------
 
-        projects_text = st.text_area(
-            "Projects (one entry per line)",
-            value="\n".join(profile.get("projects", [])),
-            height=130,
+        st.divider()
+
+        st.subheader("Projects")
+
+        st.caption(
+            "Add project descriptions, technologies, "
+            "GitHub repositories and live demos."
         )
 
-        submitted = st.form_submit_button(
-            "Save My Profile",
+        existing_projects = get_project_details(profile)
+
+        default_count = min(
+            len(existing_projects),
+            8,
+        )
+
+        project_count = st.selectbox(
+            "Number of projects",
+            options=list(range(0, 9)),
+            index=default_count,
+            help="Choose how many projects to include.",
+        )
+
+        project_inputs = []
+
+        for i in range(project_count):
+
+            old_project = (
+                existing_projects[i]
+                if i < len(existing_projects)
+                else {}
+            )
+
+            st.markdown(f"### Project {i + 1}")
+
+            project_title = st.text_input(
+                "Project title",
+                value=old_project.get("title", ""),
+                key=f"profile_project_title_{i}",
+            )
+
+            project_description = st.text_area(
+                "Project description",
+                value=old_project.get("description", ""),
+                height=90,
+                key=f"profile_project_description_{i}",
+            )
+
+            old_technologies = old_project.get(
+                "technologies", []
+            )
+
+            if isinstance(old_technologies, str):
+                old_technologies = [
+                    item.strip()
+                    for item in old_technologies.split(",")
+                    if item.strip()
+                ]
+
+            project_technologies = st.text_input(
+                "Technologies (comma-separated)",
+                value=", ".join(old_technologies),
+                key=f"profile_project_technologies_{i}",
+                help="Example: Python, Streamlit, SQLite",
+            )
+
+            project_github = st.text_input(
+                "GitHub repository URL",
+                value=old_project.get("github_url", ""),
+                key=f"profile_project_github_{i}",
+                placeholder="https://github.com/username/project",
+            )
+
+            project_live = st.text_input(
+                "Live demo URL",
+                value=old_project.get("live_url", ""),
+                key=f"profile_project_live_{i}",
+                placeholder="https://your-project.streamlit.app",
+            )
+
+            project_inputs.append({
+                "title": project_title.strip(),
+                "description": project_description.strip(),
+                "technologies": parse_skills(
+                    project_technologies
+                ),
+                "github_url": project_github.strip(),
+                "live_url": project_live.strip(),
+            })
+
+            st.divider()
+
+        save_profile = st.form_submit_button(
+            "Save Profile",
             type="primary",
             use_container_width=True,
         )
 
-    if submitted:
+    # ----------------------------------------------
+    # SAVE PROFILE
+    # ----------------------------------------------
+
+    if save_profile:
+
+        structured_projects = [
+            project
+            for project in project_inputs
+            if project["title"]
+        ]
+
+        # Keep the old projects field for compatibility
+        # with existing resume_generator.py code.
+        legacy_projects = [
+            (
+                f"{project['title']}: {project['description']}"
+                if project["description"]
+                else project["title"]
+            )
+            for project in structured_projects
+        ]
 
         new_profile = {
             "name": name.strip(),
-            "email": user["email"],
+            "email": email.strip(),
             "phone": phone.strip(),
             "location": location.strip(),
             "linkedin": linkedin.strip(),
@@ -657,234 +721,329 @@ elif page == "Profile & Resume":
             "skills": parse_skills(skills_text),
             "experience": parse_lines(experience_text),
             "education": parse_lines(education_text),
-            "projects": parse_lines(projects_text),
+            "projects": legacy_projects,
+            "project_details": structured_projects,
         }
 
         errors = validate_profile(new_profile)
 
         if errors:
+
             for error in errors:
                 st.error(error)
 
         else:
+
             try:
-                save_profile(user["id"], new_profile)
+
+                save_user_profile(
+                    st.session_state.user["id"],
+                    new_profile,
+                )
 
                 st.session_state.profile = new_profile
 
-                st.success("Your profile has been saved.")
+                st.success(
+                    "Your profile and project details have been saved."
+                )
+
                 st.rerun()
 
             except Exception as exc:
-                st.error("Could not save your profile.")
-                st.caption(str(exc))
+
+                st.error(
+                    f"Could not save your profile: {exc}"
+                )
+
+    # ----------------------------------------------
+    # RESUME DOWNLOAD
+    # ----------------------------------------------
 
     st.divider()
 
-    st.markdown("### Download your resume")
+    st.subheader("Download your resume")
 
     profile = current_profile()
 
     if not profile.get("name", "").strip():
-        st.info("Save your profile before generating your resume.")
+
+        st.info(
+            "Enter and save your name before generating a resume."
+        )
 
     else:
+
         try:
+
             pdf_bytes = generate_resume_pdf(profile)
 
             st.download_button(
                 "Download Resume PDF",
                 data=pdf_bytes,
-                file_name="CareerForge_Resume.pdf",
+                file_name="resume.pdf",
                 mime="application/pdf",
-                type="primary",
-                use_container_width=True,
             )
 
         except Exception as exc:
-            st.error("Resume generation failed.")
-            st.caption(str(exc))
+
+            st.error(
+                f"Could not generate the resume: {exc}"
+            )
 
 
-# =========================================================
-# 10. PORTFOLIO GENERATOR
-# =========================================================
+# --------------------------------------------------
+# 10. PORTFOLIO
+# --------------------------------------------------
 
 elif page == "Portfolio":
 
-    show_hero(
-        "Portfolio Builder",
-        "Turn your professional profile into a downloadable portfolio website.",
+    st.title("Portfolio Generator")
+
+    st.write(
+        "Create a downloadable HTML portfolio from your saved profile."
     )
 
     profile = current_profile()
 
     if not profile.get("name", "").strip():
-        st.warning(
-            "Complete your profile before creating your portfolio."
+
+        st.info(
+            "First complete and save your profile in the Profile & Resume page."
         )
 
     else:
+
         try:
+
             html_content = generate_portfolio_html(profile)
 
-            st.success("Your portfolio is ready.")
-
-            st.download_button(
-                "Download Portfolio Website",
-                data=html_content,
-                file_name="CareerForge_Portfolio.html",
-                mime="text/html",
-                type="primary",
-                use_container_width=True,
+            st.success(
+                "Your portfolio is ready."
             )
 
-            with st.expander("Preview generated HTML"):
-                st.code(html_content, language="html")
+            st.download_button(
+                "Download Portfolio HTML",
+                data=html_content,
+                file_name="portfolio.html",
+                mime="text/html",
+            )
+
+            with st.expander("Preview portfolio HTML"):
+
+                st.code(
+                    html_content,
+                    language="html",
+                )
 
         except Exception as exc:
-            st.error("Could not generate your portfolio.")
-            st.caption(str(exc))
+
+            st.error(
+                f"Could not generate your portfolio: {exc}"
+            )
 
 
-# =========================================================
-# 11. JOB MATCH
-# =========================================================
+# --------------------------------------------------
+# 11. JOB DESCRIPTION MATCH
+# --------------------------------------------------
 
 elif page == "Job Match":
 
-    show_hero(
-        "Job Match Analyzer",
-        "Compare your skills and experience with a job description.",
+    st.title("Job Description Match")
+
+    st.write(
+        "Compare the keywords in your saved profile "
+        "with a job description."
     )
 
     profile = current_profile()
 
-    if not profile.get("name", "").strip():
-        st.warning(
-            "Please complete your profile before analyzing a job."
-        )
-
     job_description = st.text_area(
-        "Paste the job description",
+        "Paste job description",
         value=st.session_state.job_description,
-        height=260,
+        height=240,
         placeholder=(
-            "Paste the job responsibilities, required skills, "
-            "and qualifications here..."
+            "Paste the job responsibilities and qualifications here..."
         ),
     )
 
-    if st.button("Analyze Job Match", type="primary"):
+    st.session_state.job_description = job_description
 
-        st.session_state.job_description = job_description
+    if st.button(
+        "Analyze Match",
+        type="primary",
+    ):
 
-        profile_errors = validate_profile(profile)
-        description_error = validate_job_description(job_description)
+        errors = validate_profile(profile)
+
+        description_error = validate_job_description(
+            job_description
+        )
 
         if not profile.get("name", "").strip():
-            st.error("Please save your profile first.")
+
+            st.warning(
+                "Please save your profile first. A name is required."
+            )
 
         elif description_error:
-            st.error(description_error)
 
-        elif profile_errors:
-            for error in profile_errors:
-                st.error(error)
+            st.warning(description_error)
 
         else:
+
             try:
+
                 result = analyze_job_match(
                     profile,
                     job_description,
                 )
 
-                st.session_state.job_match_result = result
+                st.metric(
+                    "Keyword overlap",
+                    f"{result['match_percentage']}%",
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+
+                    st.subheader("Matched keywords")
+
+                    if result["matched_keywords"]:
+
+                        st.write(
+                            ", ".join(
+                                result["matched_keywords"]
+                            )
+                        )
+
+                    else:
+
+                        st.info(
+                            "No matching keywords found."
+                        )
+
+                with col2:
+
+                    st.subheader("Missing keywords")
+
+                    if result["missing_keywords"]:
+
+                        st.write(
+                            ", ".join(
+                                result["missing_keywords"]
+                            )
+                        )
+
+                    else:
+
+                        st.success(
+                            "All extracted job keywords were found."
+                        )
+
+                st.subheader("Suggestions")
+
+                for suggestion in result["suggestions"]:
+                    st.write(f"- {suggestion}")
+
+                st.caption(
+                    "This is a simple keyword-overlap estimate, "
+                    "not an official ATS score or a hiring prediction."
+                )
 
             except Exception as exc:
-                st.error("Job matching failed.")
-                st.caption(str(exc))
 
-    result = st.session_state.job_match_result
+                st.error(
+                    f"Could not analyze the job description: {exc}"
+                )
 
-    if result:
+    # ----------------------------------------------
+    # OPTIONAL OWNER SUBMISSION
+    # ----------------------------------------------
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### Match results")
+    st.subheader(
+        "Optionally submit your information for owner review"
+    )
 
-        score = result["match_percentage"]
+    st.write(
+        "Only submit if you want the CareerForge AI owner to review "
+        "your information. If you consent, your name, email, saved "
+        "profile/resume text, and job description will be stored in "
+        "a private database. The owner will receive an email "
+        "notification containing your name and email, but not your "
+        "resume or job description. You may request deletion by "
+        "contacting the app owner."
+    )
 
-        st.metric(
-            "Keyword overlap",
-            f"{score}%",
+    with st.form("owner_submission_form"):
+
+        consent_to_store = st.checkbox(
+            "I have read the notice and consent to storing my name, "
+            "email, resume/profile text, and job description, and "
+            "to the owner receiving an email notification."
         )
 
-        st.progress(
-            max(0.0, min(float(score) / 100, 1.0))
+        submit_for_owner = st.form_submit_button(
+            "Submit information to app owner",
+            type="primary",
         )
 
-        col1, col2 = st.columns(2)
+    if submit_for_owner:
 
-        with col1:
-            st.markdown("#### Matched keywords")
-
-            matched = result["matched_keywords"]
-
-            if matched:
-                for keyword in matched:
-                    st.success(keyword)
-            else:
-                st.info("No matching keywords found.")
-
-        with col2:
-            st.markdown("#### Missing keywords")
-
-            missing = result["missing_keywords"]
-
-            if missing:
-                for keyword in missing:
-                    st.warning(keyword)
-            else:
-                st.success("No missing keywords found.")
-
-        st.markdown("### Improvement suggestions")
-
-        for suggestion in result["suggestions"]:
-            st.write(f"• {suggestion}")
-
-        st.caption(
-            "This is a keyword-overlap estimate. It is not an official "
-            "ATS score or a prediction of hiring success."
+        resume_text = json.dumps(
+            current_profile(),
+            ensure_ascii=False,
+            indent=2,
         )
 
+        saved, message = save_submission(
+            name=current_profile().get("name", ""),
+            email=current_profile().get("email", ""),
+            resume_text=resume_text,
+            job_description=st.session_state.get(
+                "job_description", ""
+            ),
+            consent=consent_to_store,
+        )
 
-# =========================================================
+        if saved:
+            st.success(message)
+
+        else:
+            st.warning(message)
+
+
+# --------------------------------------------------
 # 12. APPLICATION TRACKER
-# =========================================================
+# --------------------------------------------------
 
 elif page == "Application Tracker":
 
-    show_hero(
-        "Application Tracker",
-        "Keep track of the opportunities you are pursuing.",
+    st.title("Job Application Tracker")
+
+    st.write(
+        "Save and manage the jobs you are applying for."
     )
 
-    st.markdown("### Add a new application")
+    with st.expander(
+        "Add a new application",
+        expanded=True,
+    ):
 
-    with st.form("add_application_form"):
+        with st.form("add_application_form"):
 
-        col1, col2 = st.columns(2)
+            company = st.text_input("Company *")
 
-        with col1:
-            company = st.text_input("Company name *")
             job_title = st.text_input("Job title *")
-            job_url = st.text_input("Job posting URL")
 
-        with col2:
+            job_url = st.text_input("Job URL")
+
             status = st.selectbox(
-                "Application status",
+                "Status",
                 options=list(STATUSES),
+                index=0,
             )
 
             applied_date = st.date_input(
@@ -892,67 +1051,89 @@ elif page == "Application Tracker":
                 value=date.today(),
             )
 
-            has_followup = st.checkbox("Add a follow-up date")
+            has_followup = st.checkbox(
+                "Set a follow-up date"
+            )
 
             follow_up_date = None
 
             if has_followup:
+
                 follow_up_date = st.date_input(
                     "Follow-up date",
                     value=date.today(),
                 )
 
-        notes = st.text_area("Notes")
+            notes = st.text_area("Notes")
 
-        submitted = st.form_submit_button(
-            "Add Application",
-            type="primary",
-            use_container_width=True,
-        )
+            add_submitted = st.form_submit_button(
+                "Add Application",
+                type="primary",
+            )
 
-    if submitted:
+        if add_submitted:
 
-        if not company.strip() or not job_title.strip():
-            st.error("Company and job title are required.")
+            if not company.strip() or not job_title.strip():
 
-        else:
-            try:
-                add_user_application(
-                    user["id"],
-                    company=company.strip(),
-                    job_title=job_title.strip(),
-                    job_url=job_url.strip(),
-                    status=status,
-                    applied_date=applied_date.isoformat(),
-                    follow_up_date=(
-                        follow_up_date.isoformat()
-                        if follow_up_date else ""
-                    ),
-                    notes=notes.strip(),
+                st.error(
+                    "Company and job title are required."
                 )
 
-                st.success("Application added to your account.")
-                st.rerun()
+            else:
 
-            except Exception as exc:
-                st.error("Could not add the application.")
-                st.caption(str(exc))
+                try:
+
+                    add_user_application(
+                        user_id=st.session_state.user["id"],
+                        company=company.strip(),
+                        job_title=job_title.strip(),
+                        job_url=job_url.strip(),
+                        status=status,
+                        applied_date=applied_date.isoformat(),
+                        follow_up_date=(
+                            follow_up_date.isoformat()
+                            if follow_up_date
+                            else ""
+                        ),
+                        notes=notes.strip(),
+                    )
+
+                    st.success("Application added.")
+
+                    st.rerun()
+
+                except Exception as exc:
+
+                    st.error(
+                        f"Could not add the application: {exc}"
+                    )
+
+    # ----------------------------------------------
+    # SAVED APPLICATIONS
+    # ----------------------------------------------
 
     st.divider()
 
-    st.markdown("### Your saved applications")
+    st.subheader("Saved applications")
 
     applications = get_applications()
 
-    if applications:
+    if not applications:
+
+        st.info("No applications saved yet.")
+
+    else:
 
         display_rows = [
             {
+                "ID": get_application_id(app),
                 "Company": app.get("company", ""),
                 "Job title": app.get("job_title", ""),
                 "Status": app.get("status", ""),
                 "Applied date": app.get("applied_date", ""),
-                "Follow-up date": app.get("follow_up_date", ""),
+                "Follow-up date": app.get(
+                    "follow_up_date", ""
+                ),
             }
             for app in applications
         ]
@@ -963,175 +1144,207 @@ elif page == "Application Tracker":
             hide_index=True,
         )
 
-        st.caption(
-            "These records are loaded using your signed-in account ID."
-        )
+        editable_apps = [
+            app
+            for app in applications
+            if get_application_id(app) is not None
+        ]
 
-    else:
-        show_empty_state(
-            "No applications yet. Add your first application above."
-        )
+        if editable_apps:
 
-    st.info(
-        "This version supports secure per-user adding and viewing. "
-        "Per-user editing and deletion require corresponding functions "
-        "in src/user_data.py; the shared application database is not used."
-    )
+            st.subheader(
+                "Edit or delete an application"
+            )
+
+            selected_id = st.selectbox(
+                "Select application",
+                options=[
+                    get_application_id(app)
+                    for app in editable_apps
+                ],
+                format_func=lambda app_id: next(
+                    (
+                        f"{app.get('company', '')} — "
+                        f"{app.get('job_title', '')} "
+                        f"(ID {app_id})"
+                        for app in editable_apps
+                        if get_application_id(app) == app_id
+                    ),
+                    str(app_id),
+                ),
+            )
+
+            selected_app = next(
+                app
+                for app in editable_apps
+                if get_application_id(app) == selected_id
+            )
+
+            with st.form("edit_application_form"):
+
+                edit_company = st.text_input(
+                    "Company",
+                    value=selected_app.get("company", ""),
+                )
+
+                edit_title = st.text_input(
+                    "Job title",
+                    value=selected_app.get("job_title", ""),
+                )
+
+                edit_url = st.text_input(
+                    "Job URL",
+                    value=selected_app.get("job_url", ""),
+                )
+
+                current_status = selected_app.get(
+                    "status",
+                    STATUSES[0],
+                )
+
+                status_index = (
+                    list(STATUSES).index(current_status)
+                    if current_status in STATUSES
+                    else 0
+                )
+
+                edit_status = st.selectbox(
+                    "Status",
+                    options=list(STATUSES),
+                    index=status_index,
+                )
+
+                edit_applied_date = st.text_input(
+                    "Applied date (YYYY-MM-DD)",
+                    value=selected_app.get(
+                        "applied_date", ""
+                    ),
+                )
+
+                edit_follow_up = st.text_input(
+                    "Follow-up date (YYYY-MM-DD, optional)",
+                    value=selected_app.get(
+                        "follow_up_date", ""
+                    ),
+                )
+
+                edit_notes = st.text_area(
+                    "Notes",
+                    value=selected_app.get("notes", ""),
+                )
+
+                update_submitted = st.form_submit_button(
+                    "Save Changes"
+                )
+
+            if update_submitted:
+
+                if (
+                    not edit_company.strip()
+                    or not edit_title.strip()
+                ):
+
+                    st.error(
+                        "Company and job title are required."
+                    )
+
+                else:
+
+                    try:
+
+                        updated = update_owned_application(
+                            selected_id,
+                            company=edit_company.strip(),
+                            job_title=edit_title.strip(),
+                            job_url=edit_url.strip(),
+                            status=edit_status,
+                            applied_date=edit_applied_date.strip(),
+                            follow_up_date=edit_follow_up.strip(),
+                            notes=edit_notes.strip(),
+                        )
+
+                        if updated:
+
+                            st.success(
+                                "Application updated."
+                            )
+
+                            st.rerun()
+
+                        else:
+
+                            st.warning(
+                                "That application was not found in your account."
+                            )
+
+                    except Exception as exc:
+
+                        st.error(
+                            f"Could not update the application: {exc}"
+                        )
+
+            # --------------------------------------
+            # DELETE APPLICATION
+            # --------------------------------------
+
+            st.divider()
+
+            st.subheader("Delete an application")
+
+            confirm_delete = st.checkbox(
+                f"I confirm that I want to delete "
+                f"application ID {selected_id}."
+            )
+
+            if st.button("Delete Selected Application"):
+
+                if not confirm_delete:
+
+                    st.warning(
+                        "Please confirm before deleting."
+                    )
+
+                else:
+
+                    try:
+
+                        deleted = delete_owned_application(
+                            selected_id
+                        )
+
+                        if not deleted:
+
+                            st.warning(
+                                "That application was not found in your account."
+                            )
+
+                            st.stop()
+
+                        st.success("Application deleted.")
+
+                        st.rerun()
+
+                    except Exception as exc:
+
+                        st.error(
+                            f"Could not delete the application: {exc}"
+                        )
 
 
-# =========================================================
+# --------------------------------------------------
 # 13. SETTINGS AND PRIVACY
-# =========================================================
+# --------------------------------------------------
 
 elif page == "Settings & Privacy":
 
-    show_hero(
-        "Settings & Privacy",
-        "Manage your account information and understand how your data is stored.",
+    st.title("Settings & Privacy")
+
+    st.write(PRIVACY_GUIDANCE)
+
+    st.info(
+        "Owner-submitted records are stored separately in the "
+        "private Supabase submissions table. Use the owner "
+        "dashboard (your app URL followed by ?admin=1) to "
+        "review or delete those submissions."
     )
 
-    profile = current_profile()
-
-    st.markdown("### Account information")
-
-    account_col1, account_col2 = st.columns(2)
-
-    with account_col1:
-        st.markdown("**Account name**")
-        st.write(user.get("name", ""))
-
-    with account_col2:
-        st.markdown("**Login email**")
-        st.write(user.get("email", ""))
-
-    st.divider()
-
-    st.markdown("### Profile information")
-
-    profile_col1, profile_col2 = st.columns(2)
-
-    with profile_col1:
-        st.markdown("**Profile name**")
-        st.write(profile.get("name") or "Not added")
-
-        st.markdown("**Location**")
-        st.write(profile.get("location") or "Not added")
-
-    with profile_col2:
-        st.markdown("**Skills added**")
-        st.write(len(profile.get("skills", [])))
-
-        st.markdown("**Projects added**")
-        st.write(len(profile.get("projects", [])))
-
-    if st.button("Edit My Profile", type="primary"):
-        st.session_state.selected_page = "Profile & Resume"
-        st.rerun()
-
-    st.divider()
-
-    st.markdown("### Privacy information")
-
-    privacy_items = [
-        (
-            "Account authentication",
-            "Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes "
-            "by the authentication module, not as plain text."
-        ),
-        (
-            "Account separation",
-            "The profile and application functions in this app use "
-            "the signed-in user's account ID."
-        ),
-        (
-            "Profile data",
-            "Your saved profile may contain contact information, "
-            "skills, education, experience, and projects."
-        ),
-        (
-            "Application data",
-            "Your job application records may contain company names, "
-            "job titles, dates, URLs, and notes."
-        ),
-        (
-            "Database storage",
-            "The current user-data module uses SQLite. Local SQLite "
-            "files on Streamlit Community Cloud are not guaranteed "
-            "to persist across environment replacement or redeployment."
-        ),
-    ]
-
-    for heading, description in privacy_items:
-        with st.expander(heading):
-            st.write(description)
-
-    st.warning(
-        "For production use, configure persistent database storage, "
-        "restrict database access, and use HTTPS. Do not commit users.db "
-        "or .streamlit/secrets.toml to GitHub."
-    )
-
-    st.divider()
-
-    st.markdown("### Security recommendations")
-
-    st.write(
-        "• Use a unique password that you do not use on other websites."
-    )
-    st.write(
-        "• Never share your password or database credentials."
-    )
-    st.write(
-        "• Rotate any database key that has accidentally been exposed."
-    )
-    st.write(
-        "• Keep private configuration in Streamlit Secrets."
-    )
-    st.write(
-        "• Use a persistent database before relying on this app "
-        "for long-term account storage."
-    )
-
-    st.divider()
-
-    st.markdown("### Sign out")
-
-    st.write(
-        "Sign out when using a shared or public computer."
-    )
-
-    if st.button("Sign Out", use_container_width=True):
-
-        for key in [
-            "user",
-            "profile",
-            "job_description",
-            "job_match_result",
-            "loaded_user_id",
-            "selected_page",
-            "profile_edit_redirect",
-        ]:
-            st.session_state.pop(key, None)
-
-        st.rerun()
-
-
-# =========================================================
-# 14. FOOTER
-# =========================================================
-
-st.divider()
-
-st.markdown(
-    """
-    <div style="
-        text-align:center;
-        color:#8490a8;
-        font-size:12px;
-        padding:12px 0;
-    ">
-        CareerForge AI · Your personal career workspace
-    </div>
-    """,
-    unsafe_allow_html=True,
-)

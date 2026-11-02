@@ -1,198 +1,287 @@
 
+<div align="center">
+
 # 🚀 CareerForge AI
-### Your Career. Your Story. Your Future.
+### Dynamic Portfolio & Resume Generator
 
-<p align="center">
-  <a href="https://dynamic-portfolio-resume-generator.streamlit.app/">
-    <img src="https://img.shields.io/badge/🚀_Live_Demo-Launch_App-success?style=for-the-badge" alt="Live Demo">
-  </a>
-  <a href="https://github.com/anujkumardubey152-bot">
-    <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub">
-  </a>
-  <a href="https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/">
-    <img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin" alt="LinkedIn">
-  </a>
-</p>
+**Build your professional identity, create an impressive resume, showcase your projects, analyze job opportunities, and manage your career journey — all in one place.**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Streamlit-Framework-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
-  <img src="https://img.shields.io/badge/AI-Powered-8A2BE2?style=for-the-badge" alt="AI Powered">
-  <img src="https://img.shields.io/badge/Status-Live-success?style=for-the-badge" alt="Live">
-</p>
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Authentication](https://img.shields.io/badge/Authentication-Enabled-success)](#-authentication--privacy)
+[![Deployment](https://img.shields.io/badge/Deployment-Live-success)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+
+</div>
 
 ---
 
-## 🌟 About CareerForge AI
+## 📌 Table of Contents
 
-**CareerForge AI** is an interactive career development platform designed to help job seekers build professional resumes, create personal portfolios, analyze job descriptions, and manage job applications — all in one place.
+1. [About the Project](#-about-the-project)
+2. [Live Demo](#-live-demo)
+3. [Why I Built This](#-why-i-built-this)
+4. [Features](#-features)
+5. [How It Works](#-how-it-works)
+6. [Authentication & Privacy](#-authentication--privacy)
+7. [Tech Stack](#-tech-stack)
+8. [Project Structure](#-project-structure)
+9. [Run the Project on Your Computer](#-run-the-project-on-your-computer)
+10. [How to Use the App](#-how-to-use-the-app)
+11. [Testing](#-testing)
+12. [Deploy Online for Free](#-deploy-online-for-free)
+13. [Common Problems and Fixes](#-common-problems-and-fixes)
+14. [Frequently Asked Questions](#-frequently-asked-questions)
+15. [Future Plans](#-future-plans)
+16. [Contributing](#-contributing)
+17. [Author](#-author)
+18. [License](#-license)
 
-Whether you're a student, fresher, graduate, or experienced professional, CareerForge AI helps you build your professional identity and organize your career journey.
+---
 
-🎯 **One platform. Multiple career tools. A smarter job search.**
+## 📖 About the Project
 
-## 🌐 Live Application
+**CareerForge AI** is a modern career development web application built using **Python and Streamlit**.
 
-<p align="center">
-  <a href="https://dynamic-portfolio-resume-generator.streamlit.app/">
-    <img src="https://img.shields.io/badge/OPEN_CAREERFORGE_AI-Click_Here-2563EB?style=for-the-badge&logo=streamlit&logoColor=white" alt="Open CareerForge AI">
-  </a>
-</p>
+It is designed to simplify the process of building a professional identity and managing a job search.
 
-🔗 **Live Demo:** https://dynamic-portfolio-resume-generator.streamlit.app/
+Enter your professional information once, including your name, education, skills, experience, and projects. CareerForge AI provides several tools to help you use that information effectively.
 
-Try the application and explore its career-building features!
+With CareerForge AI, you can:
+
+- Generate a professional **PDF resume**.
+- Create and download a personal **HTML portfolio website**.
+- Analyze job descriptions and discover your **job match score**.
+- Identify matching and missing skills or keywords.
+- Track job applications, interviews, offers, and follow-ups.
+- View your career progress through an interactive dashboard.
+- Manage your profile and privacy settings.
+
+The application also includes user authentication and user-specific profile and application management.
+
+**CareerForge AI brings essential career tools together in one simple platform.**
+
+---
+
+## 🔗 Live Demo
+
+**👉 [Click here to open CareerForge AI](https://dynamic-portfolio-resume-generator.streamlit.app/)**
+
+- No installation is required.
+- Works in modern web browsers on desktop and mobile.
+- Hosted on Streamlit Community Cloud.
+- Create an account to access the application's user-specific features.
+
+**Note:** Streamlit Community Cloud may temporarily put an inactive application to sleep. If a wake-up screen appears, click the button and wait for the application to start.
+
+---
+
+## 🎯 Why I Built This
+
+When applying for jobs, students and job seekers often face several problems:
+
+- Creating a professional resume takes time.
+- Maintaining different resumes for different job roles can be difficult.
+- Building a personal portfolio website often requires coding knowledge.
+- It is not always clear which skills a job description requires.
+- Missing keywords can make it harder to tailor a resume.
+- Managing multiple job applications manually becomes confusing.
+- Remembering interview dates and follow-up dates is difficult.
+
+I wanted to create a single platform that makes these tasks easier.
+
+**CareerForge AI aims to make career preparation more organized, accessible, and efficient.**
 
 ---
 
 ## ✨ Features
 
-### 📊 1. Interactive Career Dashboard
-- View job application statistics.
-- Monitor active applications, interviews, and offers.
-- Track upcoming and overdue follow-ups.
-- Get an overview of your career progress.
+### 1. 📊 Interactive Career Dashboard
 
-### 📄 2. Professional Resume Generator
-- Create a structured professional resume.
-- Add personal information, professional summary, skills, education, and experience.
-- Generate downloadable PDF resumes.
-- Keep your professional information organized.
+A central dashboard that provides an overview of your job search.
 
-### 🌐 3. Personal Portfolio Generator
-- Generate a professional portfolio website.
-- Showcase skills, projects, education, and experience.
-- Include professional links and contact information.
-- Download your portfolio as an HTML file.
+- Total job applications.
+- Active applications.
+- Interview progress.
+- Job offers.
+- Application status breakdown.
+- Recent applications.
+- Upcoming follow-ups.
+- Overdue follow-ups.
 
-### 🤖 4. Job Match Analysis
-- Analyze job descriptions against your profile.
-- Identify matching skills and keywords.
-- Discover missing keywords.
-- Get suggestions to improve your job applications.
+### 2. 👤 Profile Management
 
-### 📌 5. Job Application Tracker
-- Add and manage job applications.
-- Track application statuses.
-- Record company names and job titles.
-- Set follow-up dates and add notes.
-- Update or delete application records.
+Maintain your professional information in one place.
 
-### 🔐 6. Authentication & Privacy
-- User registration and login.
-- Secure password hashing.
-- User-specific profile and application data.
-- Privacy and data management options.
+- Personal information.
+- Contact details.
+- Professional summary.
+- Technical and professional skills.
+- Work experience.
+- Educational qualifications.
+- Projects and achievements.
+
+Your profile can be used by the resume generator, portfolio generator, and job matching tools.
+
+### 3. 📄 Professional Resume Generator
+
+Create a professional resume using your saved profile.
+
+- Generate a downloadable PDF resume.
+- Include personal and contact information.
+- Showcase professional skills.
+- Add education and experience.
+- Include project information.
+- Organize your career details in a structured format.
+
+The generated resume is designed to use a clear, readable layout. However, ATS compatibility can vary between recruitment systems.
+
+### 4. 🌐 Personal Portfolio Generator
+
+Turn your professional profile into a personal portfolio website.
+
+- Generate a downloadable HTML portfolio.
+- Showcase your professional introduction.
+- Display your skills and experience.
+- Highlight education and projects.
+- Include contact and professional links.
+- Create a personal online presence without manually writing HTML.
+
+The generated HTML file can be hosted using services such as GitHub Pages or Netlify.
+
+### 5. 🤖 Job Match Analysis
+
+Understand how closely your profile matches a job description.
+
+Paste a job description and analyze it against your profile.
+
+The tool provides:
+
+- Job match percentage.
+- Matching keywords.
+- Missing keywords.
+- Suggestions for improving your profile and application.
+
+This helps you identify relevant skills and tailor your application before applying.
+
+**Note:** The match percentage is an indicative keyword-based analysis, not a guarantee of ATS selection or job eligibility.
+
+### 6. 📌 Job Application Tracker
+
+Manage your job search in one organized place.
+
+You can:
+
+- Add new job applications.
+- Record company names.
+- Save job titles and job links.
+- Record application dates.
+- Set follow-up dates.
+- Add personal notes.
+- Update application statuses.
+- Edit existing records.
+- Delete applications when needed.
+
+Track your progress through statuses such as Applied, Interview, Offer, and Rejected, depending on the statuses supported by the application.
+
+### 7. 🔐 Authentication & Privacy
+
+CareerForge AI includes account authentication and user-specific data management.
+
+- Create an account.
+- Log in securely.
+- Password hashing using PBKDF2-HMAC-SHA256.
+- Store profiles separately for individual users.
+- Manage personal application records.
+- Access account and privacy settings.
+- Download available personal data.
+- Access available data deletion options.
+
+### 8. ⚙️ Settings & Privacy
+
+A dedicated section for managing your account and personal information.
+
+- View account information.
+- Review privacy-related information.
+- Manage profile data.
+- Download available data.
+- Delete supported profile and application records.
+- Log out securely.
+
+### 9. 🎨 Modern SaaS-Style Interface
+
+CareerForge AI includes a modern and interactive user interface.
+
+- Clean dashboard layout.
+- Modern navigation sidebar.
+- Organized content sections.
+- Interactive forms and controls.
+- Responsive styling.
+- Consistent visual design across application pages.
 
 ---
 
-## 🖥️ Application Pages
+## ⚙️ How It Works
 
-| Page | Purpose |
-|---|---|
-| Dashboard | Career statistics and progress |
-| Profile & Resume | Manage profile and generate resumes |
-| Portfolio | Create and download portfolios |
-| Job Match | Analyze job descriptions |
-| Application Tracker | Manage job applications |
-| Settings & Privacy | Manage account and privacy |
-
----
-
-## 🛠️ Technology Stack
-
-| Technology | Usage |
-|---|---|
-| Python | Core programming language |
-| Streamlit | Interactive web application |
-| SQLite | Local data storage |
-| Supabase | Optional submission storage |
-| HTML | Portfolio generation |
-| CSS | Frontend styling |
-| AI / NLP logic | Job description and keyword analysis |
-| Git & GitHub | Version control |
-| Streamlit Community Cloud | Deployment |
-
----
-
-## 📁 Project Structure
+Here is the basic workflow:
 
 ```text
-CareerForge-AI/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-│
-├── .streamlit/
-│   └── secrets.toml
-│
-└── src/
-    ├── __init__.py
-    ├── auth.py
-    ├── auth_ui.py
-    ├── user_data.py
-    ├── resume_generator.py
-    ├── portfolio_generator.py
-    ├── job_matcher.py
-    ├── application_tracker.py
-    ├── validation.py
-    ├── dashboard.py
-    ├── privacy_settings.py
-    └── privacy_store.py
+              Open CareerForge AI
+                       |
+                       ▼
+              Create Account / Login
+                       |
+                       ▼
+                Career Dashboard
+                       |
+                       ▼
+              Complete Your Profile
+                       |
+          ┌────────────┼────────────┐
+          │            │            │
+          ▼            ▼            ▼
+      Resume       Portfolio     Job Match
+     Generator     Generator     Analysis
+          │            │            │
+          ▼            ▼            ▼
+       PDF File     HTML File   Match Results
+          │            │            │
+          └────────────┼────────────┘
+                       |
+                       ▼
+              Application Tracker
+                       |
+                       ▼
+             Track Career Progress
+                       |
+                       ▼
+               Dashboard Updates
 ```
+
+Each major feature is organized into separate Python modules inside the `src` folder, making the project easier to maintain and extend.
 
 ---
 
-## ⚙️ Installation & Setup
+## 🔐 Authentication & Privacy
 
-Want to run CareerForge AI on your local machine? Follow these steps.
+CareerForge AI provides account authentication and user-specific data handling.
 
-### 1. Clone the Repository
+### What it does
 
-```bash
-git clone https://github.com/anujkumardubey152-bot/YOUR-REPOSITORY.git
-```
+- Allows users to register and log in.
+- Uses salted PBKDF2-HMAC-SHA256 password hashing.
+- Associates profile information with individual user accounts.
+- Keeps application records associated with their respective users.
+- Provides account and privacy management options.
+- Includes optional Supabase-backed submission storage for administrative review.
 
-Replace `YOUR-REPOSITORY` with your actual repository name.
+### Configuration
 
-### 2. Navigate to the Project Folder
+If your deployment uses Supabase, create:
 
-```bash
-cd YOUR-REPOSITORY
-```
-
-### 3. Create a Virtual Environment
-
-```bash
-python -m venv venv
-```
-
-Activate it:
-
-**Windows**
-```bash
-venv\Scripts\activate
-```
-
-**macOS / Linux**
-```bash
-source venv/bin/activate
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Configure Secrets (If Using Supabase)
-
-Create:
-
-```text
-.streamlit/secrets.toml
-```
+`.streamlit/secrets.toml`
 
 Add your private configuration:
 
@@ -205,134 +294,390 @@ service_role_key = "YOUR_SUPABASE_SECRET_KEY"
 password = "YOUR_PRIVATE_ADMIN_PASSWORD"
 ```
 
-⚠️ Never upload your private `secrets.toml` file or credentials to GitHub.
+### On Streamlit Community Cloud
 
-### 6. Run the Application
+1. Open your Streamlit application dashboard.
+2. Go to **Settings**.
+3. Open **Secrets**.
+4. Add the required configuration.
+5. Save your changes.
+
+### Important Security Tips
+
+- Never upload `secrets.toml` to GitHub.
+- Never expose your Supabase service-role key.
+- Use strong passwords.
+- Do not share private credentials.
+- Keep your database credentials secure.
+
+**Storage note:** SQLite data stored on Streamlit Community Cloud may not survive restarts or redeployments. Use persistent database storage for important production data.
+
+---
+
+## 🛠️ Tech Stack
+
+| Area | Technology |
+|---|---|
+| Programming Language | Python 3.10+ |
+| Web Framework | Streamlit |
+| Frontend Styling | HTML and CSS |
+| Database | SQLite |
+| Optional Cloud Storage | Supabase |
+| Resume Generation | PDF generation |
+| Portfolio Generation | HTML generation |
+| Job Analysis | Python keyword matching |
+| Authentication | PBKDF2-HMAC-SHA256 |
+| Version Control | Git and GitHub |
+| Deployment | Streamlit Community Cloud |
+
+---
+
+## 🗂️ Project Structure
+
+```text
+CareerForge-AI/
+│
+├── app.py                       # Main Streamlit application
+├── requirements.txt             # Python dependencies
+├── README.md                    # Project documentation
+│
+├── .gitignore                   # Git ignored files
+│
+├── .streamlit/
+│   └── secrets.toml             # Private configuration
+│
+└── src/
+    ├── __init__.py              # Python package initializer
+    │
+    ├── auth.py                  # Registration and login logic
+    ├── auth_ui.py               # Authentication interface
+    ├── user_data.py             # User-specific data management
+    │
+    ├── resume_generator.py      # PDF resume generation
+    ├── portfolio_generator.py   # HTML portfolio generation
+    │
+    ├── job_matcher.py           # Job description analysis
+    ├── application_tracker.py   # Job application management
+    ├── validation.py            # Profile and input validation
+    ├── dashboard.py             # Dashboard data and statistics
+    │
+    ├── privacy_settings.py      # Privacy and database settings
+    └── privacy_store.py         # Optional submission storage
+```
+
+---
+
+## 💻 Run the Project on Your Computer
+
+### What You Need First
+
+- Python 3.10 or newer.
+- pip package manager.
+- Git installed on your computer.
+- A code editor such as VS Code.
+
+### Step 1: Download the Project
+
+```bash
+git clone https://github.com/anujkumardubey152-bot/Dynamic_Portfolio_Resume_Generator.git
+
+cd Dynamic_Portfolio_Resume_Generator
+```
+
+### Step 2: Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+**Windows**
+
+```bash
+venv\Scripts\activate
+```
+
+**macOS / Linux**
+
+```bash
+source venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Configure Secrets
+
+If you are using Supabase, create:
+
+```text
+.streamlit/secrets.toml
+```
+
+Add the required private configuration as explained in the Authentication & Privacy section.
+
+Do not commit this file to GitHub.
+
+### Step 5: Start the Application
 
 ```bash
 streamlit run app.py
 ```
 
-Open your browser at:
+Your browser should open the application at:
 
 ```text
 http://localhost:8501
 ```
 
+If it does not open automatically, copy the address into your browser.
+
 ---
 
-## ☁️ Deployment
+## 📱 How to Use the App
+
+1. Open [CareerForge AI](https://dynamic-portfolio-resume-generator.streamlit.app/).
+2. Create a new account or log in.
+3. Open the Dashboard to view your career overview.
+4. Go to Profile & Resume.
+5. Enter your personal and professional details.
+6. Save your profile.
+7. Generate and download your PDF resume.
+8. Open Portfolio to generate your HTML portfolio.
+9. Visit Job Match and paste a job description.
+10. Review your match percentage and missing keywords.
+11. Open Application Tracker.
+12. Add jobs you have applied for and update their statuses.
+13. Return to Dashboard to monitor your progress.
+14. Use Settings & Privacy to manage your account and available data options.
+15. Log out when you finish.
+
+---
+
+## 🧪 Testing
+
+The application includes separate modules for its major features.
+
+You can perform manual testing by checking:
+
+| Feature | What to Test |
+|---|---|
+| Authentication | Register, log in, and log out |
+| Profile | Save and reload profile information |
+| Resume | Generate and download a PDF |
+| Portfolio | Generate and download HTML |
+| Job Match | Analyze a sample job description |
+| Tracker | Add, edit, update, and delete applications |
+| Dashboard | Check application statistics |
+| Privacy | Test available data management options |
+
+If automated tests are included in your repository, run them using:
+
+```bash
+python -m pytest
+```
+
+---
+
+## 🌐 Deploy Online for Free
 
 CareerForge AI is deployed using **Streamlit Community Cloud**.
 
-To deploy your own version:
+You can also deploy your own version.
 
-1. Push your project to GitHub.
+### Deployment Steps
+
+1. Push your project to a GitHub repository.
 2. Visit [Streamlit Community Cloud](https://share.streamlit.io/).
-3. Sign in with GitHub.
-4. Select **Create app**.
-5. Choose your repository and branch.
-6. Set the main file path to `app.py`.
-7. Configure required secrets in the app settings.
-8. Click **Deploy**.
+3. Sign in with your GitHub account.
+4. Click **Create App**.
+5. Select your repository.
+6. Choose the `main` branch.
+7. Set the main file path to `app.py`.
+8. Open Advanced Settings and configure the required secrets.
+9. Click **Deploy**.
+
+After deployment, Streamlit will provide a public application URL.
+
+**Live Project:** https://dynamic-portfolio-resume-generator.streamlit.app/
 
 ---
 
-## 🔒 Security & Privacy
+## 🩺 Common Problems and Fixes
 
-CareerForge AI includes authentication and privacy-related functionality.
+### "Streamlit is not recognized" or "command not found"
 
-- Passwords use salted PBKDF2-HMAC-SHA256 hashing.
-- User profiles and applications are associated with individual accounts.
-- Administrative credentials should remain private.
-- Supabase service-role keys must never be exposed publicly.
-- Users can access available privacy and data management options.
+Streamlit may not be installed, or your virtual environment may not be activated.
 
-**Note:** SQLite storage on Streamlit Community Cloud may not persist across restarts or redeployments. A persistent database is recommended for production use.
+Run:
+
+```bash
+pip install -r requirements.txt
+```
+
+### The app says a Python module is missing
+
+Install the dependencies again:
+
+```bash
+pip install -r requirements.txt
+```
+
+Also check that you are running the command from the project directory.
+
+### Login or registration is not working
+
+Check the application logs and verify that the database is configured correctly.
+
+### Supabase configuration error
+
+Check that the required secrets are correctly configured in `.streamlit/secrets.toml` or the Streamlit Cloud Secrets settings.
+
+### PDF or HTML file is not downloading
+
+Check that your profile contains the required information and that all validation checks have passed.
+
+### The live application is slow to open
+
+Streamlit Community Cloud may put inactive applications to sleep. Wait for the application to wake up.
+
+### Saved application data disappears after redeployment
+
+SQLite files on temporary cloud storage may not be persistent. Use a persistent cloud database for important information.
 
 ---
 
-## 🎯 Project Objectives
+## ❓ Frequently Asked Questions
 
-- Simplify professional resume creation.
-- Help users establish an online professional identity.
-- Improve understanding of job requirements.
-- Make job application tracking easier.
-- Encourage organized career development.
-- Provide useful career tools in one platform.
+**Is CareerForge AI free to use?**
+
+The live application is publicly accessible. Hosting, database, and third-party service availability may be subject to their respective limits and policies.
+
+**Do I need programming knowledge to use it?**
+
+No. You can use the application through its interactive interface. Programming knowledge is only needed if you want to modify the source code.
+
+**What is an ATS-friendly resume?**
+
+ATS stands for Applicant Tracking System. Companies use these systems to process and organize resumes. A clear, structured resume can make its content easier for such systems to read, although no format guarantees successful parsing.
+
+**Can I host my generated portfolio online?**
+
+Yes. The generated HTML portfolio can be hosted on services such as GitHub Pages, Netlify, or another web hosting provider.
+
+**Does Job Match guarantee that I will get selected?**
+
+No. It provides an indicative comparison of profile keywords and job description requirements. Hiring decisions depend on many other factors.
+
+**Can different users manage their own profiles?**
+
+The application includes user-specific profile and application data management.
+
+**Is my data permanently stored?**
+
+Storage persistence depends on the database configuration. Local SQLite storage on Streamlit Community Cloud should not be treated as permanent.
+
+**Can I customize the resume or portfolio design?**
+
+Yes. Developers can modify `src/resume_generator.py` and `src/portfolio_generator.py` to customize the generated documents.
 
 ---
 
-## 🚀 Future Enhancements
+## 🗺️ Future Plans
 
-- [ ] AI-powered resume improvement.
-- [ ] ATS-friendly resume scoring.
-- [ ] Multiple resume templates.
-- [ ] Advanced portfolio customization.
+Some ideas for future development:
+
+- [ ] Multiple professional resume templates.
+- [ ] Advanced ATS resume analysis.
+- [ ] AI-powered resume improvement suggestions.
 - [ ] AI cover letter generator.
-- [ ] Personalized job recommendations.
-- [ ] Email reminders for follow-ups.
+- [ ] Advanced job recommendations.
+- [ ] More portfolio customization options.
+- [ ] Project showcase with GitHub and live demo links.
+- [ ] Email reminders for job follow-ups.
+- [ ] Export application records to CSV or Excel.
 - [ ] Persistent cloud database integration.
 - [ ] Advanced career analytics.
+- [ ] Additional profile and account customization.
 
 ---
 
-## 👨‍💻 About the Developer
+## 🤝 Contributing
 
-### Anuj Kumar Dubey
+Ideas, suggestions, and improvements are welcome!
 
-Aspiring Software Developer | Python Developer | Technology Enthusiast
+If you want to contribute:
 
-I developed **CareerForge AI** to bring essential career-building tools together in one accessible platform.
+1. Fork this repository.
+2. Create a new branch:
 
-I'm passionate about Python development, web applications, and building practical technology solutions.
+```bash
+git checkout -b my-new-feature
+```
 
-<p align="left">
-  <a href="https://github.com/anujkumardubey152-bot">
-    <img src="https://img.shields.io/badge/GitHub-Follow_Me-181717?style=for-the-badge&logo=github" alt="GitHub">
-  </a>
-  <a href="https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/">
-    <img src="https://img.shields.io/badge/LinkedIn-Connect_With_Me-0A66C2?style=for-the-badge&logo=linkedin" alt="LinkedIn">
-  </a>
-</p>
-
----
-
-## 🤝 Contributions
-
-Suggestions, feedback, and contributions are welcome!
-
-1. Fork the repository.
-2. Create a new branch.
 3. Make your changes.
-4. Commit your improvements.
-5. Submit a Pull Request.
+4. Commit your improvements:
+
+```bash
+git commit -m "Add new feature"
+```
+
+5. Push your branch:
+
+```bash
+git push origin my-new-feature
+```
+
+6. Open a Pull Request.
+
+---
+
+## 👨‍💻 Author
+
+**Anuj Kumar Dubey**
+
+B.Tech CSE, IERT Prayagraj | AI/ML Developer
+
+I am passionate about Python development, artificial intelligence, machine learning, and building practical software solutions.
+
+### Connect With Me
+
+[![GitHub](https://img.shields.io/badge/GitHub-anujkumardubey152--bot-181717?style=for-the-badge&logo=github)](https://github.com/anujkumardubey152-bot)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Anuj_Kumar_Dubey-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/)
+
+### Try My Project
+
+[![Live App](https://img.shields.io/badge/🚀_Open_CareerForge_AI-Live_Demo-success?style=for-the-badge)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+
+If you like this project, please give it a ⭐ on GitHub. It really helps!
 
 ---
 
 ## 📜 License
 
-This project is currently shared for educational and portfolio purposes.
+This project is licensed under the MIT License.
 
-Add a `LICENSE` file if you decide to distribute it under a specific open-source license.
+You are free to use, modify, and distribute the project according to the terms of the MIT License.
 
----
-
-## ⭐ Show Your Support
-
-If you like CareerForge AI:
-
-- ⭐ Star the GitHub repository.
-- 🚀 Try the live application.
-- 💬 Share your feedback.
-- 🤝 Connect with me on LinkedIn.
+See the `LICENSE` file for details.
 
 ---
 
-<p align="center">
-  <b>CareerForge AI</b>
-  <br>
-  Build Your Profile. Showcase Your Skills. Shape Your Future. 🚀
-  <br><br>
-  Made with ❤️ by <a href="https://github.com/anujkumardubey152-bot">Anuj Kumar Dubey</a>
-</p>
+<div align="center">
+
+### 🚀 CareerForge AI
+
+**Build Your Profile. Showcase Your Skills. Shape Your Future.**
+
+Made with ❤️ by **Anuj Kumar Dubey**
+
+[Live Demo](https://dynamic-portfolio-resume-generator.streamlit.app/) · [GitHub](https://github.com/anujkumardubey152-bot) · [LinkedIn](https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/)
+
+</div>
+
+

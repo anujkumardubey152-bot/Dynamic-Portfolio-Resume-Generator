@@ -1,18 +1,17 @@
-
-<div align="center">
+ <div align="center">
 
 # 🚀 CareerForge AI
 ### Dynamic Portfolio & Resume Generator
 
 **Build your professional identity, create an impressive resume, showcase your projects, analyze job opportunities, and manage your career journey — all in one place.**
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Authentication](https://img.shields.io/badge/Authentication-Enabled-success)](#-authentication--privacy)
-[![Deployment](https://img.shields.io/badge/Deployment-Live-success)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+[![Deployment](https://img.shields.io/badge/Deployment-Live-success)](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/)
 
 </div>
 
@@ -67,7 +66,7 @@ The application also includes user authentication and user-specific profile and 
 
 ## 🔗 Live Demo
 
-**👉 [Click here to open CareerForge AI](https://dynamic-portfolio-resume-generator.streamlit.app/)**
+**👉 [Click here to open CareerForge AI](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/)**
 
 - No installation is required.
 - Works in modern web browsers on desktop and mobile.
@@ -228,36 +227,36 @@ CareerForge AI includes a modern and interactive user interface.
 Here is the basic workflow:
 
 ```text
-              Open CareerForge AI
-                       |
-                       ▼
-              Create Account / Login
-                       |
-                       ▼
-                Career Dashboard
-                       |
-                       ▼
-              Complete Your Profile
-                       |
-          ┌────────────┼────────────┐
-          │            │            │
-          ▼            ▼            ▼
-      Resume       Portfolio     Job Match
-     Generator     Generator     Analysis
-          │            │            │
-          ▼            ▼            ▼
-       PDF File     HTML File   Match Results
-          │            │            │
-          └────────────┼────────────┘
-                       |
-                       ▼
-              Application Tracker
-                       |
-                       ▼
-             Track Career Progress
-                       |
-                       ▼
-               Dashboard Updates
+             Open CareerForge AI
+                      |
+                      ▼
+             Create Account / Login
+                      |
+                      ▼
+               Career Dashboard
+                      |
+                      ▼
+             Complete Your Profile
+                      |
+         ┌────────────┼────────────┐
+         │            │            │
+         ▼            ▼            ▼
+     Resume       Portfolio     Job Match
+    Generator     Generator     Analysis
+         │            │            │
+         ▼            ▼            ▼
+      PDF File     HTML File   Match Results
+         │            │            │
+         └────────────┼────────────┘
+                      |
+                      ▼
+             Application Tracker
+                      |
+                      ▼
+            Track Career Progress
+                      |
+                      ▼
+              Dashboard Updates
 ```
 
 Each major feature is organized into separate Python modules inside the `src` folder, making the project easier to maintain and extend.
@@ -440,7 +439,7 @@ If it does not open automatically, copy the address into your browser.
 
 ## 📱 How to Use the App
 
-1. Open [CareerForge AI](https://dynamic-portfolio-resume-generator.streamlit.app/).
+1. Open [CareerForge AI](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/).
 2. Create a new account or log in.
 3. Open the Dashboard to view your career overview.
 4. Go to Profile & Resume.
@@ -503,7 +502,7 @@ You can also deploy your own version.
 
 After deployment, Streamlit will provide a public application URL.
 
-**Live Project:** https://dynamic-portfolio-resume-generator.streamlit.app/
+**Live Project:** https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/
 
 ---
 
@@ -652,7 +651,7 @@ I am passionate about Python development, artificial intelligence, machine learn
 
 ### Try My Project
 
-[![Live App](https://img.shields.io/badge/🚀_Open_CareerForge_AI-Live_Demo-success?style=for-the-badge)](https://dynamic-portfolio-resume-generator.streamlit.app/)
+[![Live App](https://img.shields.io/badge/🚀_Open_CareerForge_AI-Live_Demo-success?style=for-the-badge)](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/)
 
 If you like this project, please give it a ⭐ on GitHub. It really helps!
 
@@ -676,8 +675,6 @@ See the `LICENSE` file for details.
 
 Made with ❤️ by **Anuj Kumar Dubey**
 
-[Live Demo](https://dynamic-portfolio-resume-generator.streamlit.app/) · [GitHub](https://github.com/anujkumardubey152-bot) · [LinkedIn](https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/)
+[Live Demo](https://dynamic-portfolio-resume-generator-t7hhfx3eyspgz5iy5vxfrk.streamlit.app/) · [GitHub](https://github.com/anujkumardubey152-bot) · [LinkedIn](https://www.linkedin.com/in/anuj-kumar-dubey-58043b377/)
 
 </div>
-
-
